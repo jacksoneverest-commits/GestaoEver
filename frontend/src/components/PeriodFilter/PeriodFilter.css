@@ -1,0 +1,16 @@
+.period-filter { font-family: system-ui, sans-serif; }
+.period-filter__campos { display: flex; gap: 16px; flex-wrap: wrap; }
+.period-filter__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.875rem;
+  color: #374151;
+}
+.period-filter__campo input {
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+.period-filter__erro { margin: 8px 0 0; color: #b91c1c; font-size: 0.875rem; }

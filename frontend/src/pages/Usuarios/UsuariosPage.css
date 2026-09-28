@@ -1,0 +1,60 @@
+.usuarios { min-height: 100vh; background: #f3f4f6; font-family: system-ui, sans-serif; color: #111827; }
+.usuarios__topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+.usuarios__voltar { font-size: 0.875rem; color: #1d4ed8; }
+.usuarios__titulo { margin: 4px 0 0; font-size: 1.25rem; }
+.usuarios__sair {
+  padding: 8px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #374151;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+.usuarios__conteudo { display: flex; flex-direction: column; gap: 24px; padding: 24px; max-width: 960px; margin: 0 auto; }
+.usuarios__conteudo section { padding: 16px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; }
+.usuarios__secao-titulo { margin: 0 0 12px; font-size: 1rem; font-weight: 600; color: #374151; }
+.usuarios__carregando { margin: 0; color: #4b5563; }
+.usuarios__vazio { margin: 0; font-size: 0.9375rem; color: #4b5563; font-style: italic; }
+.usuarios__erro {
+  margin: 8px 0 0;
+  padding: 12px 16px;
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  font-size: 0.9375rem;
+}
+.usuarios__sucesso {
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  color: #166534;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  font-size: 0.875rem;
+}
+.usuarios__tabela { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+.usuarios__tabela th,
+.usuarios__tabela td { padding: 10px 12px; border-top: 1px solid #e5e7eb; text-align: left; vertical-align: top; }
+.usuarios__tabela thead th { background: #f9fafb; font-weight: 600; color: #374151; }
+.usuarios__acoes { min-width: 14rem; }
+.usuarios__reset-form { display: flex; flex-direction: column; gap: 6px; }
+.usuarios__reset-form label { font-size: 0.8125rem; color: #374151; }
+.usuarios__reset-botoes { display: flex; gap: 8px; }
+.usuarios__form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px; }
+.usuarios__campo { display: flex; flex-direction: column; gap: 4px; font-size: 0.875rem; color: #374151; }
+.usuarios__campo input,
+.usuarios__campo select { padding: 6px 8px; font-size: 0.9375rem; min-width: 12rem; }
+@media (max-width: 600px) {
+  .usuarios__topo { padding: 12px 16px; }
+  .usuarios__conteudo { padding: 16px; }
+}

@@ -1,0 +1,55 @@
+-- =============================================================================
+-- Migration 003 - Chave unica por periodo no cache de vendas (PLAN.md, Task 5.4)
+-- Alvo: MariaDB 10.1.41, banco do ERP. Toca APENAS vendas_periodo_cache
+-- (criada pela migration 001). compras_periodo_cache nao e alterada.
+--
+-- Esta migration e definitiva: depois de aplicada, NAO e editada. Qualquer
+-- mudanca de schema vira uma nova migration numerada (004_..., 005_...).
+--
+-- POR QUE EXISTE
+--   Decisao do usuario (revisao da Fase 5): o cache de vendas passa a ter UMA
+--   linha por dia (periodo_inicio = periodo_fim = dia), o que serve a qualquer
+--   intervalo de comparacao (soma das linhas diarias). O job da Task 5.5
+--   (backend/src/jobs/vendasPeriodoCache.job.js) grava essas linhas com upsert
+--   (INSERT ... ON DUPLICATE KEY UPDATE), e o upsert so funciona com uma chave
+--   unica em (periodo_inicio, periodo_fim). O usuario da aplicacao agora tem
+--   UPDATE e ALTER em supcardoso.* (mas nao DELETE).
+--   Isso SUBSTITUI o "design append-only" descrito no cabecalho da 001 (varias
+--   versoes por periodo): a partir desta migration existe no maximo uma linha
+--   por (periodo_inicio, periodo_fim), atualizada no lugar.
+--
+-- REGRA DE VENDA VALIDA VIGENTE
+--   flagvc.Venda = 1 E vendacupom.Status = 0 (ver backend/src/shared/
+--   vendaValida.js). O comentario da migration 001 que cita "flagvc.flag = 1"
+--   esta DESATUALIZADO - a 001 ja foi aplicada e nao pode ser editada, entao a
+--   correcao fica registrada aqui.
+--
+-- INDICE ANTIGO
+--   O indice idx_periodo_atualizado (periodo_inicio, periodo_fim, atualizado_em)
+--   da 001 CONTINUA existindo. Com a chave unica ele fica redundante (o prefixo
+--   (periodo_inicio, periodo_fim) ja e coberto por uq_vendas_periodo), mas NAO
+--   e removido: esta migration nao faz DROP de nada. Custo: escrita um pouco
+--   mais cara no job (dois indices secundarios) - irrelevante para ~1 linha/dia.
+--   Remover e opcional e ficaria para uma migration futura, se desejado.
+--
+-- IDEMPOTENCIA
+--   ADD UNIQUE KEY IF NOT EXISTS e suportado pelo MariaDB desde 10.0.2 (ALTER
+--   TABLE ... ADD {INDEX|KEY|UNIQUE} IF NOT EXISTS). Na segunda execucao o
+--   MariaDB apenas emite o warning 1061 "Duplicate key name
+--   'uq_vendas_periodo'" e nao altera nada. Nenhuma linha e apagada ou
+--   modificada.
+--   Limitacao conhecida: IF NOT EXISTS compara so o NOME do indice - se ja
+--   existir um indice chamado uq_vendas_periodo com outra definicao, ele e
+--   mantido como esta.
+--
+-- FALHA CONTROLADA
+--   Se a tabela tiver linhas duplicadas em (periodo_inicio, periodo_fim) (ex:
+--   versoes gravadas no modelo append-only da 001), o ALTER falha com
+--   ER_DUP_ENTRY (1062) e a tabela fica INTACTA (o ALTER e atomico; nenhuma
+--   linha e apagada). Nesse caso e preciso decidir com o usuario quais versoes
+--   manter antes de reaplicar. Na verificacao feita ao escrever esta migration
+--   a tabela estava vazia (COUNT(*) = 0), portanto sem duplicatas.
+-- =============================================================================
+
+ALTER TABLE `vendas_periodo_cache`
+  ADD UNIQUE KEY IF NOT EXISTS `uq_vendas_periodo` (`periodo_inicio`, `periodo_fim`);

@@ -1,0 +1,60 @@
+# Dependências
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+.pnp/
+.pnp.js
+.yarn/cache/
+.yarn/unplugged/
+
+# Build e arquivos gerados
+dist/
+build/
+backend/dist/
+frontend/build/
+frontend/dist/
+out/
+.turbo/
+
+# Segredos e variáveis de ambiente
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.pfx
+credentials.json
+secrets.json
+config/database.yml
+
+# Banco de dados local
+*.sql
+*.sql.gz
+*.dump
+*.sqlite
+*.sqlite3
+*.db
+db-data/
+mariadb-data/
+backups/
+
+# Uploads e mídia
+uploads/
+storage/uploads/
+public/uploads/
+media/
+tmp/uploads/
+
+# Cache e logs
+*.log
+logs/
+npm-debug.log*
+yarn-error.log*
+.npm/
+.eslintcache
+.cache/
+.parcel-cache/
+node_modules/.cache/
+coverage/
+.nyc_output/

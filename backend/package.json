@@ -1,0 +1,28 @@
+{
+  "name": "gestao-eversoftplus-backend",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "test": "jest",
+    "job:cache-vendas": "node src/jobs/vendasPeriodoCache.job.js",
+    "job:cache-produtos": "node src/jobs/vendasProdutoCache.job.js",
+    "job:diario": "node src/jobs/agendarJobsDiarios.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mysql2": "^3.24.4"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.4",
+    "supertest": "^7.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  }
+}
