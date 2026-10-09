@@ -1,4 +1,19 @@
-const { decidirDesde, hojeLocalIso, somarDias } = require('../../src/jobs/agendarJobsDiarios');
+const { decidirDesde, hojeLocalIso, somarDias, lerDesdeArgv } = require('../../src/jobs/agendarJobsDiarios');
+
+describe('agendarJobsDiarios - lerDesdeArgv', () => {
+  it('sem --desde devolve null (a rotina decide sozinha)', () => {
+    expect(lerDesdeArgv([])).toBeNull();
+  });
+
+  it('--desde AAAA-MM-DD devolve a data informada', () => {
+    expect(lerDesdeArgv(['--desde', '2025-01-01'])).toBe('2025-01-01');
+  });
+
+  it('--desde com formato inválido lança erro (nunca repassa texto livre aos jobs)', () => {
+    expect(() => lerDesdeArgv(['--desde', '01/01/2025'])).toThrow();
+    expect(() => lerDesdeArgv(['--desde'])).toThrow();
+  });
+});
 
 describe('agendarJobsDiarios - decidirDesde (lógica pura, sem banco nem processos)', () => {
   it('nunca rodou com sucesso (estado ausente) -> pede --desde de 30 dias atrás', () => {

@@ -13,6 +13,7 @@ const estoqueRoutes = require('./modules/estoque/estoque.routes');
 const estoqueCoberturaRoutes = require('./modules/estoque/estoqueCobertura.routes');
 const margemRoutes = require('./modules/rentabilidade/margem.routes');
 const margemEvolucaoRoutes = require('./modules/rentabilidade/margemEvolucao.routes');
+const cacheRoutes = require('./modules/cache/cache.routes');
 
 function lerOrigensPermitidas() {
   return (process.env.CORS_ORIGINS || '')
@@ -70,6 +71,9 @@ function createApp() {
 
   // Módulo Rentabilidade: todas as rotas exigem token válido.
   app.use('/api/rentabilidade', autenticar, margemRoutes, margemEvolucaoRoutes);
+
+  // Atualização das tabelas de cache (botão "Atualizar dados"): todas as rotas exigem token válido.
+  app.use('/api/cache', autenticar, cacheRoutes);
 
   // Error handler final: nunca expõe stack trace nem mensagem interna ao cliente.
   // eslint-disable-next-line no-unused-vars

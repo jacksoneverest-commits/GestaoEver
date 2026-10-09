@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import LoginPage from './pages/Login/LoginPage.jsx';
 import DashboardPage from './pages/Dashboard/DashboardPage.jsx';
 import VendasPage from './pages/Vendas/VendasPage.jsx';
@@ -16,6 +16,8 @@ function navegar(rota) {
 
 function App() {
   const [, forcarRender] = useState(0);
+  // Muda quando o botão "Atualizar dados" conclui: a página atual remonta e recarrega os dados.
+  const [versaoDados, setVersaoDados] = useState(0);
 
   useEffect(() => {
     const aoMudarHash = () => forcarRender((n) => n + 1);
@@ -58,8 +60,13 @@ function App() {
   else if (rota === '#/usuarios') pagina = <UsuariosPage />;
 
   return (
-    <AppShell rotaAtual={rota} usuario={getUsuarioAtual()} onLogout={sair}>
-      {pagina}
+    <AppShell
+      rotaAtual={rota}
+      usuario={getUsuarioAtual()}
+      onLogout={sair}
+      onDadosAtualizados={() => setVersaoDados((n) => n + 1)}
+    >
+      <Fragment key={versaoDados}>{pagina}</Fragment>
     </AppShell>
   );
 
