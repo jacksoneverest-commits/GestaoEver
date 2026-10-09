@@ -14,10 +14,37 @@ const estoqueCoberturaRoutes = require('./modules/estoque/estoqueCobertura.route
 const margemRoutes = require('./modules/rentabilidade/margem.routes');
 const margemEvolucaoRoutes = require('./modules/rentabilidade/margemEvolucao.routes');
 
+function lerOrigensPermitidas() {
+  return (process.env.CORS_ORIGINS || '')
+    .split(',')
+    .map((o) => o.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
+}
+
 function createApp() {
   const app = express();
 
-  app.use(cors());
+  const origensPermitidas = lerOrigensPermitidas();
+
+  // Preflight Private Network Access: só para origens listadas.
+  app.use((req, res, next) => {
+    if (
+      req.method === 'OPTIONS' &&
+      req.headers['access-control-request-private-network'] === 'true' &&
+      origensPermitidas.includes(req.headers.origin)
+    ) {
+      res.setHeader('Access-Control-Allow-Private-Network', 'true');
+    }
+    next();
+  });
+
+  // Origem não listada (ou lista vazia) não recebe Access-Control-Allow-Origin;
+  // requisições sem header Origin seguem normalmente.
+  app.use(
+    cors({
+      origin: (origin, callback) => callback(null, !origin || origensPermitidas.includes(origin)),
+    })
+  );
   app.use(express.json());
 
   app.get('/health', (req, res) => {

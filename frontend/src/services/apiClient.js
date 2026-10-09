@@ -1,4 +1,5 @@
-import { API_URL, getToken, logout } from './authService.js';
+import { getToken, logout } from './authService.js';
+import { getApiUrl } from './apiUrlService.js';
 
 // Cliente HTTP das rotas autenticadas. Toda chamada aos módulos de dados passa por aqui
 // (via os services em frontend/src/services/), nunca direto de um componente.
@@ -8,7 +9,7 @@ export async function apiGet(caminho, parametros = {}) {
     if (valor !== undefined && valor !== null && valor !== '') query.append(chave, valor);
   });
   const texto = query.toString();
-  const url = `${API_URL}${caminho}${texto ? `?${texto}` : ''}`;
+  const url = `${getApiUrl()}${caminho}${texto ? `?${texto}` : ''}`;
 
   let resposta;
   try {
@@ -43,7 +44,7 @@ export async function apiGet(caminho, parametros = {}) {
 async function enviar(metodo, caminho, corpoEnvio) {
   let resposta;
   try {
-    resposta = await fetch(`${API_URL}${caminho}`, {
+    resposta = await fetch(`${getApiUrl()}${caminho}`, {
       method: metodo,
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
       body: JSON.stringify(corpoEnvio || {}),

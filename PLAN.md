@@ -387,6 +387,40 @@
 
 ---
 
+## Sprint 6 — Deploy: frontend na Vercel + API instalada no cliente
+
+### Fase 15 — URL da API configurável em runtime (frontend na Vercel, API local em HTTP)
+> Dependências: Fases 1 a 14
+> Paralelismo: Task 15.1 (Backend) + Task 15.2 (Frontend) em paralelo; depois Task 15.3 (docs/instalador)
+> Decisões (2026-10-08): URL informada no login e salva no `localStorage` (padrão `VITE_API_URL`, depois `http://localhost:3001`); a API é HTTP e o mixed content é liberado manualmente no navegador (Chrome/Edge); CORS restrito por `CORS_ORIGINS`; rate limit de login fica fora (pendência de segurança).
+
+#### Task 15.1 — Backend: CORS restrito por `CORS_ORIGINS`
+- Agent: Backend Engineer
+- Output: `backend/src/app.js` usa lista de origens vinda de `CORS_ORIGINS` (separadas por vírgula); responde `Access-Control-Allow-Private-Network: true` no preflight; `backend/.env.example` com a variável (só o nome); sem dependência nova
+- Testes críticos:
+  - [x] Origem listada em `CORS_ORIGINS` recebe `Access-Control-Allow-Origin`
+  - [x] Origem não listada não recebe `Access-Control-Allow-Origin`
+  - [x] Preflight com `Access-Control-Request-Private-Network` responde `Access-Control-Allow-Private-Network: true`
+
+#### Task 15.2 — Frontend: URL da API em runtime
+- Agent: Frontend Engineer
+- Output: `getApiUrl()`/`setApiUrl()` em `frontend/src/services/` (localStorage → `VITE_API_URL` → `http://localhost:3001`, com try/catch no storage); `authService` e `apiClient` passam a usar `getApiUrl()`; campo "Servidor" na tela de login com normalização (sem `/` final), aceita `http://` e `https://`, valida por `GET /health`, aviso sobre liberar conteúdo inseguro, limpa o token ao trocar de servidor
+- Testes críticos:
+  - [x] `getApiUrl` devolve a URL salva, senão `VITE_API_URL`, senão `http://localhost:3001`
+  - [x] `setApiUrl` normaliza a URL (remove `/` final) e rejeita valor que não seja `http(s)://`
+  - [x] `login` e `apiClient` usam a URL salva em runtime
+  - [x] Login valida o servidor via `/health` e mostra erro claro quando falha
+  - [x] Trocar de servidor limpa o token
+
+#### Task 15.3 — Docs, `vercel.json` e instalador
+- Agent: Backend Engineer (scripts/docs de infra)
+- Output: `frontend/vercel.json` (build do Vite), READMEs e CLAUDE.md atualizados; `backend/scripts/instalar-producao.ps1` sem build do frontend e pedindo `CORS_ORIGINS`
+- Critérios:
+  - [x] Documenta como liberar conteúdo inseguro no Chrome/Edge para o domínio da Vercel
+  - [x] Pendência registrada: rate limit no login
+
+---
+
 ## Resumo de paralelismo e agents
 
 **Tasks que rodam em paralelo (mesma fase, arquivos independentes):**

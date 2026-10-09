@@ -1,4 +1,5 @@
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { getApiUrl } from './apiUrlService.js';
+
 const TOKEN_KEY = 'token';
 
 export function getToken() {
@@ -20,7 +21,7 @@ export function logout() {
 export async function login({ usuario, senha }) {
   let resposta;
   try {
-    resposta = await fetch(`${API_URL}/api/auth/login`, {
+    resposta = await fetch(`${getApiUrl()}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ usuario, senha }),

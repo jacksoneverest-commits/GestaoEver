@@ -38,3 +38,4 @@
 }
 .login__card button:disabled { background: #93a5d9; cursor: not-allowed; }
 .login__erro { margin: 8px 0 0; color: #b91c1c; font-size: 0.875rem; }
+.login__ajuda { margin: 4px 0 0; color: #475569; font-size: 0.75rem; }

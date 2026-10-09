@@ -22,7 +22,7 @@ Gestao/
 │   │   ├── db/               # conexão MariaDB e queries
 │   │   └── jobs/              # rotinas de agregação/cache: vendasPeriodoCache.job.js (por dia) e vendasProdutoCache.job.js (por dia e produto); rodar com npm run job:cache-vendas / job:cache-produtos
 │   └── tests/                # espelha src/ — health.test.js cobre a rota /health
-├── frontend/                 # aplicação React (dashboard)
+├── frontend/                 # aplicação React (dashboard); hospedada na Vercel (vercel.json), recebe a URL da API em runtime
 │   ├── src/
 │   │   ├── main.jsx           # ponto de entrada React
 │   │   ├── App.jsx            # layout base
@@ -51,7 +51,9 @@ npm install
 npm run dev
 ```
 
-Variáveis de ambiente do backend (`backend/.env`, ver `.env.example`): `PORT` (porta do servidor Express). Credenciais do MariaDB (`DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`) serão adicionadas quando o módulo de conexão for implementado (PLAN.md, Fase 2).
+Variáveis de ambiente do backend (`backend/.env`, ver `.env.example`): `PORT`, `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `AUTH_SECRET` e `CORS_ORIGINS` (origens exatas do frontend permitidas, separadas por vírgula, ex.: `https://seuapp.vercel.app`; o backend também responde `Access-Control-Allow-Private-Network`).
+
+**Deploy (Fase 15):** o frontend fica na Vercel e a API roda em HTTP no servidor do cliente (instalador: `backend/scripts/instalar-producao.ps1`). A URL da API é informada no campo "Servidor" do login (salva no `localStorage`; padrão `VITE_API_URL`, depois `http://localhost:3001`). Como o site é HTTPS e a API é HTTP, é preciso liberar conteúdo inseguro no navegador (ver `frontend/README.md`). Pendência de segurança: rate limit no login (exigiria `express-rate-limit`, dependência nova).
 
 ## Padrões de código
 - Nomenclatura de arquivos: backend em kebab-case/lowerCamelCase por responsabilidade (ex: `auth.controller.js`, `auth.service.js`); componentes React em PascalCase (ex: `VendasPage.jsx`)
