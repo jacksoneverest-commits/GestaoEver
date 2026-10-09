@@ -19,6 +19,8 @@
 // Uso:
 //   node src/jobs/agendarJobsDiarios.js
 //   npm run job:diario   (a partir de backend/)
+//   node src/jobs/agendarJobsDiarios.js --desde AAAA-MM-DD   (carga inicial do instalador)
+// Também é disparada pelo botão "Atualizar dados" do frontend (POST /api/cache/atualizar).
 //
 // Agendamento (Windows, Agendador de Tarefas): ver backend/scripts/agendar-tarefa-windows.md.
 // Escreve no banco do ERP (via os dois jobs) — mesma regra deles: só rodar com confirmação do
@@ -108,10 +110,22 @@ async function rodarJob(nome, caminhoScript, argv) {
   return true;
 }
 
-async function main() {
+// Lê `--desde AAAA-MM-DD` do argv (carga inicial do instalador). Valida o formato porque o valor é
+// repassado aos jobs filhos. Sem a flag devolve null: a rotina decide sozinha (decidirDesde).
+function lerDesdeArgv(argv) {
+  const indice = argv.indexOf('--desde');
+  if (indice === -1) return null;
+  const valor = argv[indice + 1];
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(valor || '')) {
+    throw new Error('Uso: node agendarJobsDiarios.js [--desde AAAA-MM-DD]');
+  }
+  return valor;
+}
+
+async function main(desdeForcado = null) {
   const hoje = hojeLocalIso();
   const estadoAnterior = lerEstado();
-  const desde = decidirDesde(estadoAnterior, hoje);
+  const desde = desdeForcado || decidirDesde(estadoAnterior, hoje);
 
   logar(`Início da rotina diária. desde=${desde || '(nenhum; recálculo normal da janela)'}`);
 
@@ -137,7 +151,8 @@ async function main() {
 }
 
 if (require.main === module) {
-  main()
+  Promise.resolve()
+    .then(() => main(lerDesdeArgv(process.argv.slice(2))))
     .then((codigo) => {
       process.exitCode = codigo;
     })
@@ -147,4 +162,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { main, decidirDesde, hojeLocalIso, somarDias };
+module.exports = { main, decidirDesde, hojeLocalIso, somarDias, lerDesdeArgv, ESTADO_PATH };

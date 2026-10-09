@@ -2,11 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import Icon from '../Icon/Icon.jsx';
 import AvatarMenu from './AvatarMenu.jsx';
 import BuscaModulos from './BuscaModulos.jsx';
+import AtualizarDados from '../AtualizarDados/AtualizarDados.jsx';
 import { MODULOS, moduloDaRota } from './modulos.js';
 import './AppShell.css';
 
 // Layout autenticado: sidebar (gaveta no mobile), topbar e área principal. Só apresentação e navegação por hash.
-function AppShell({ rotaAtual, usuario, onLogout, children }) {
+function AppShell({ rotaAtual, usuario, onLogout, onDadosAtualizados, children }) {
   const [gavetaAberta, setGavetaAberta] = useState(false);
   const botaoMenu = useRef(null);
   const sidebar = useRef(null);
@@ -172,6 +173,7 @@ function AppShell({ rotaAtual, usuario, onLogout, children }) {
           </button>
           <p className="appshell__titulo" data-testid="appshell-titulo">{moduloAtual.rotulo}</p>
           <BuscaModulos />
+          <AtualizarDados onConcluido={onDadosAtualizados} />
           <AvatarMenu nome={usuario} onLogout={onLogout} />
         </div>
 

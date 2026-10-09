@@ -445,6 +445,16 @@
 
 ---
 
+## Sprint 8 — Atualização das tabelas de cache sob demanda (decidido pelo usuário em 2026-10-09)
+
+### Fase 16 — Carga inicial no instalador + botão "Atualizar dados"
+- [x] 16.1 Backend: `POST /api/cache/atualizar` (202; dispara `agendarJobsDiarios.js` em processo separado, uma por vez) e `GET /api/cache/status` (`ocioso|rodando|ok|falha` + `ultimaAtualizacao`); `agendarJobsDiarios.js` aceita `--desde AAAA-MM-DD`. Testes: `backend/tests/modules/cache/`, `backend/tests/app.cache.test.js`
+- [x] 16.2 Frontend: `cacheService.js` e componente `AtualizarDados` na topbar do AppShell (polling do status; ao concluir com sucesso a página atual recarrega). Testes: `frontend/tests/components/AtualizarDados/`, `frontend/tests/services/cacheService.test.js`
+- [x] 16.3 Instalador: página "Carga inicial dos dados" (data inicial, padrão 2025-01-01, `/DESDE=` na instalação silenciosa); em instalação nova, após `/health` responder (`backend/scripts/aguardar-api.js`), roda `agendarJobsDiarios.js --desde <data>` em segundo plano
+- [ ] 16.4 Verificação manual: instalar em máquina limpa e clicar no botão com dados reais
+
+---
+
 ## Resumo de paralelismo e agents
 
 **Tasks que rodam em paralelo (mesma fase, arquivos independentes):**
