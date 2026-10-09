@@ -433,6 +433,16 @@
 - [x] U.5 Reestilização dos módulos
 - [x] U.6 Verificação e entrega — itens de código concluídos (correções da auditoria final; npm test e build passam). Pendente fora do código: conferência visual manual com a aplicação rodando
 
+### Fase UI-Gráficos — Redesign dos gráficos de Vendas (cartão, toggle Gráfico|Tabela, tabela enriquecida, destaque do pico, exportação CSV)
+> Plano detalhado, decisões e fases G.0 a G.6: `docs/plano-redesign-graficos.md`. Apenas frontend; sem dependência nova; sem alteração de backend. A exportação CSV e o toggle gráfico/tabela foram autorizados pelo usuário e registrados no `spec.md` (tópico 1, Vendas e faturamento).
+- [x] G.0 Preparação (fase registrada no PLAN; linha no spec.md)
+- [x] G.1 Tokens de gráfico (`tokens.css`)
+- [x] G.2 Layout e alinhamento do card (`CartaoGrafico`)
+- [x] G.3 Toggle Gráfico | Tabela (`AlternarVisao`, persistência em `localStorage`)
+- [x] G.4 Tabela enriquecida (`TabelaDados`: mini-barra de participação e linha de total)
+- [x] G.5 Visual das barras, destaque do pico e exportação CSV
+- [ ] G.6 Verificação e entrega — `npm test` e `npm run build` passam; pendente: conferência visual manual (360/768/1280px), revisões `ui-ux-reviewer` e `code-reviewer`
+
 ---
 
 ## Resumo de paralelismo e agents

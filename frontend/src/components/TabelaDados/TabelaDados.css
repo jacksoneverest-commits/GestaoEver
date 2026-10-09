@@ -1,0 +1,62 @@
+/* Tabela no lugar do gráfico: mesma altura do corpo do card, com rolagem contida. */
+.tabela-dados {
+  max-height: var(--altura-grafico);
+  overflow: auto;
+  font-size: var(--fs-sm);
+}
+.tabela-dados__tabela { width: 100%; border-collapse: collapse; }
+.tabela-dados__tabela th,
+.tabela-dados__tabela td {
+  padding: var(--esp-2) var(--esp-3);
+  text-align: left;
+  font-weight: 400;
+  border-bottom: 1px solid var(--cor-borda);
+}
+.tabela-dados__tabela thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  font-weight: 600;
+  color: var(--cor-texto-suave);
+  background: var(--cor-superficie-grafico);
+  border-bottom: 1px solid var(--cor-borda-forte);
+}
+.tabela-dados__tabela tbody tr:nth-child(even) { background: var(--cor-zebra); }
+.tabela-dados__tabela .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.tabela-dados__tabela tfoot th,
+.tabela-dados__tabela tfoot td {
+  position: sticky;
+  bottom: 0;
+  font-weight: 600;
+  background: var(--cor-superficie-grafico);
+  border-top: 1px solid var(--cor-borda-forte);
+  border-bottom: 0;
+}
+
+.tabela-dados__celula { display: flex; flex-direction: column; align-items: flex-end; gap: var(--esp-1); }
+.tabela-dados__valor { display: inline-flex; align-items: center; gap: var(--esp-2); }
+.tabela-dados__pico {
+  padding: 0 var(--esp-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--cor-texto-sobre-cor);
+  background: var(--cor-serie-destaque);
+  border-radius: var(--raio-pill);
+}
+
+/* Mini-barra de participação (decorativa) */
+.tabela-dados__barra {
+  display: block;
+  width: 100%;
+  min-width: var(--esp-6);
+  height: var(--esp-1);
+  appearance: none;
+  border: 0;
+  border-radius: var(--raio-pill);
+  background: var(--cor-grade-grafico-suave);
+  overflow: hidden;
+}
+.tabela-dados__barra::-webkit-progress-bar { background: var(--cor-grade-grafico-suave); border-radius: var(--raio-pill); }
+.tabela-dados__barra::-webkit-progress-value { background: var(--cor-primaria); border-radius: var(--raio-pill); }
+.tabela-dados__barra::-moz-progress-bar { background: var(--cor-primaria); border-radius: var(--raio-pill); }

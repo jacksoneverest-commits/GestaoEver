@@ -13,38 +13,44 @@
   .vendas-charts__card--largo { grid-column: 1 / -1; }
 }
 
-.vendas-charts__card {
-  min-width: 0;
-  padding: var(--esp-4);
-  background: var(--vc-card);
-  border: 1px solid var(--vc-borda);
-  border-radius: var(--raio-lg);
-  box-shadow: var(--sombra-card);
-}
-
-.vendas-charts__cabecalho {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--esp-2) var(--esp-4);
-  margin-bottom: var(--esp-3);
-}
-.vendas-charts__titulo { margin: 0; font-size: var(--fs-md); font-weight: 600; }
-
 .vendas-charts__nota { margin: var(--esp-1) 0 0; font-size: var(--fs-xs); color: var(--vc-texto-suave); }
 
 .vendas-charts__grafico { width: 100%; }
 
 .vendas-charts__tooltip {
-  padding: var(--esp-2) var(--esp-3);
+  padding: var(--esp-3);
   font-size: var(--fs-xs);
   line-height: 1.5;
   color: var(--vc-texto);
   background: var(--vc-card);
   border: 1px solid var(--vc-borda);
-  border-radius: var(--raio-sm);
+  border-radius: var(--raio-md);
   box-shadow: var(--sombra-elevada);
+}
+.vendas-charts__tooltip-rotulo { display: block; font-size: var(--fs-sm); color: var(--vc-serie-destaque); }
+.vendas-charts__tooltip-pico { font-weight: 600; color: var(--vc-serie-destaque); }
+
+/* Eixos: tamanho da fonte ligado ao token (o atributo do Recharts não aceita var()) */
+.vendas-charts__grafico .recharts-cartesian-axis-tick-value { font-size: var(--fs-xs); }
+
+/* Rótulos de valor nas barras */
+.vendas-charts__rotulo { font-size: var(--fs-xs); font-weight: 600; fill: var(--vc-texto); }
+.vendas-charts__rotulo--pico { fill: var(--vc-serie-destaque); }
+
+/* Legenda do destaque (acima do gráfico) */
+.vendas-charts__legenda {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  margin: 0 0 var(--esp-2);
+  font-size: var(--fs-xs);
+  color: var(--vc-texto-suave);
+}
+.vendas-charts__legenda-marca {
+  width: var(--esp-3);
+  height: var(--esp-3);
+  background: var(--vc-serie-destaque);
+  border-radius: var(--raio-xs);
 }
 
 /* Seletor de nível (grupo/setor/família) */
@@ -94,26 +100,6 @@
   cursor: pointer;
 }
 
-/* Tabela alternativa */
-.vendas-charts__detalhes { margin-top: var(--esp-2); font-size: var(--fs-sm); }
-.vendas-charts__detalhes summary {
-  display: flex;
-  align-items: center;
-  min-height: var(--alvo-toque);
-  cursor: pointer;
-  color: var(--vc-serie);
-}
-.vendas-charts__tabela-wrap { max-height: 320px; margin-top: var(--esp-2); overflow: auto; }
-.vendas-charts__tabela { width: 100%; border-collapse: collapse; }
-.vendas-charts__tabela th,
-.vendas-charts__tabela td {
-  padding: var(--esp-2);
-  text-align: left;
-  font-weight: 400;
-  border-bottom: 1px solid var(--vc-borda);
-}
-.vendas-charts__tabela thead th { position: sticky; top: 0; font-weight: 600; color: var(--vc-texto-suave); background: var(--vc-card); }
-.vendas-charts__tabela .num { text-align: right; font-variant-numeric: tabular-nums; }
 .vendas-charts__link {
   display: inline-flex;
   align-items: center;
