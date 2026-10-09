@@ -16,6 +16,16 @@ describe('apiClient.apiGet', () => {
     localStorage.clear();
   });
 
+  it('usa a URL da API salva em runtime', async () => {
+    localStorage.setItem('apiUrl', 'http://outro:4000');
+    const fetchMock = vi.fn().mockResolvedValue(respostaJson(200, {}));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await apiGet('/api/x');
+
+    expect(fetchMock.mock.calls[0][0]).toBe('http://outro:4000/api/x');
+  });
+
   it('envia o token Bearer e os parâmetros na query, ignorando vazios', async () => {
     const fetchMock = vi.fn().mockResolvedValue(respostaJson(200, { ok: true }));
     vi.stubGlobal('fetch', fetchMock);

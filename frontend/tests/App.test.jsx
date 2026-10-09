@@ -8,6 +8,10 @@ import { listarItens, obterCurvaAbc } from '../src/services/curvaAbcService.js';
 import { obterNiveis } from '../src/services/estoqueService.js';
 
 vi.mock('../src/services/authService.js');
+vi.mock('../src/services/apiUrlService.js', async (importOriginal) => ({
+  ...(await importOriginal()),
+  validarServidor: vi.fn().mockResolvedValue(undefined),
+}));
 vi.mock('../src/services/vendasService.js');
 vi.mock('../src/services/rankingProdutosService.js');
 vi.mock('../src/services/curvaAbcService.js');

@@ -29,6 +29,16 @@ describe('authService', () => {
     expect(getToken()).toBeNull();
   });
 
+  it('login usa a URL salva em runtime', async () => {
+    localStorage.setItem('apiUrl', 'http://outro:4000');
+    const fetchMock = vi.fn().mockResolvedValue(respostaJson(200, { token: 't' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await login({ usuario: 'a', senha: 'b' });
+
+    expect(fetchMock.mock.calls[0][0]).toBe('http://outro:4000/api/auth/login');
+  });
+
   it('login lança erro com a mensagem do backend e não guarda token', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(respostaJson(401, { erro: 'Usuário ou senha inválidos.' })));
 
