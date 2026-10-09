@@ -1,0 +1,11 @@
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--esp-4);
+  margin-bottom: var(--esp-5);
+}
+.page-header__titulo { margin: 0; font-size: var(--fs-xl); font-weight: 600; color: var(--cor-texto); }
+.page-header__subtitulo { margin: var(--esp-1) 0 0; font-size: var(--fs-sm); color: var(--cor-texto-suave); }
+.page-header__acoes { display: flex; flex-wrap: wrap; gap: var(--esp-3); align-items: center; }

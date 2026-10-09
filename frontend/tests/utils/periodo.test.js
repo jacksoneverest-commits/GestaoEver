@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { periodoUltimosDias, periodoUltimosDiasAteOntem } from '../../src/utils/periodo.js';
+import { periodoMesAtual, periodoUltimosDias, periodoUltimosDiasAteOntem } from '../../src/utils/periodo.js';
 
 describe('periodoUltimosDias', () => {
   it('retorna N dias terminando hoje, em ISO no fuso local', () => {
@@ -20,5 +20,15 @@ describe('periodoUltimosDiasAteOntem', () => {
 
   it('atravessa virada de ano quando ontem é 31/12', () => {
     expect(periodoUltimosDiasAteOntem(10, new Date(2026, 0, 1, 0, 1))).toEqual({ inicio: '2025-12-22', fim: '2025-12-31' });
+  });
+});
+
+describe('periodoMesAtual', () => {
+  it('vai do dia 1 do mês até hoje, em ISO no fuso local', () => {
+    expect(periodoMesAtual(new Date(2026, 8, 24, 23, 59))).toEqual({ inicio: '2026-09-01', fim: '2026-09-24' });
+  });
+
+  it('no dia 1 o período é de um único dia', () => {
+    expect(periodoMesAtual(new Date(2026, 0, 1, 0, 1))).toEqual({ inicio: '2026-01-01', fim: '2026-01-01' });
   });
 });

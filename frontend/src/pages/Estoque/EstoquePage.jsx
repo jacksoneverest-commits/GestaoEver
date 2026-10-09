@@ -1,5 +1,7 @@
 import { useEffect, useId, useState } from 'react';
 import CampoQuantidade from '../../components/CampoQuantidade/CampoQuantidade.jsx';
+import EstadoVazio from '../../components/EstadoVazio/EstadoVazio.jsx';
+import Skeleton from '../../components/Skeleton/Skeleton.jsx';
 import MensagemErro from '../../components/MensagemErro/MensagemErro.jsx';
 import PeriodFilter from '../../components/PeriodFilter/PeriodFilter.jsx';
 import { listarItens } from '../../services/curvaAbcService.js';
@@ -9,6 +11,7 @@ import { formatDecimal, formatInteger, formatQuantidade } from '../../utils/form
 import { classificarErro } from '../../utils/erroApi.js';
 import { interpretarLimite } from '../../utils/limite.js';
 import { periodoUltimosDiasAteOntem } from '../../utils/periodo.js';
+import PageHeader from '../../components/PageHeader/PageHeader.jsx';
 import './EstoquePage.css';
 
 // Dias fechados: o período padrão termina ONTEM (o backend limita o `fim` a ontem).
@@ -188,7 +191,7 @@ function buscarLista({ visao, filtros }) {
   return obterNiveis({ ...filtros, classificacao: visao.valor });
 }
 
-function EstoquePage({ onLogout }) {
+function EstoquePage() {
   const [periodo, setPeriodo] = useState(() => periodoUltimosDiasAteOntem(DIAS_PERIODO_PADRAO));
   const [nivel, setNivel] = useState(null); // 'grupo' | 'setor' | 'familia' | null (sem filtro)
   const [item, setItem] = useState(null); // { id, nome } do item escolhido; null = "Todos"
@@ -288,15 +291,9 @@ function EstoquePage({ onLogout }) {
 
   return (
     <div className="estoque">
-      <header className="estoque__topo">
-        <div>
-          <a className="estoque__voltar" href="#/">Voltar ao painel</a>
-          <h1 className="estoque__titulo">Estoque Inteligente</h1>
-        </div>
-        <button type="button" className="estoque__sair" onClick={onLogout}>Sair</button>
-      </header>
+      <PageHeader titulo="Estoque Inteligente" />
 
-      <main className="estoque__conteudo">
+      <div className="estoque__conteudo">
         <section aria-labelledby="estoque-filtros" className="estoque__filtros">
           <h2 id="estoque-filtros" className="estoque__secao-titulo">Filtros</h2>
           <div className="estoque__filtros-campos">
@@ -373,13 +370,13 @@ function EstoquePage({ onLogout }) {
 
           <h2 id="estoque-resultado" className="estoque__secao-titulo">{visaoAtual.titulo}</h2>
 
-          {carregando && <p role="status" aria-live="polite" className="estoque__carregando">Carregando estoque...</p>}
+          {carregando && <Skeleton rotulo="Carregando estoque..." tamanho="bloco" />}
           {erro && <MensagemErro prefixo="estoque" erro={erro} />}
 
           {!carregando && !erro && dados && (
             <>
               {periodoAjustado && (
-                <p role="status" className="estoque__aviso estoque__aviso--atencao">
+                <p role="status" className="mensagem-erro mensagem-erro--atencao">
                   {`Período ajustado até ${formatDate(dados.fim)}: só dias encerrados`}
                 </p>
               )}
@@ -403,14 +400,14 @@ function EstoquePage({ onLogout }) {
                 <p className="estoque__detalhe">{`Exibindo os ${formatInteger(itens.length)} de ${formatInteger(totalItens)} itens`}</p>
               )}
               {itens.length === 0 ? (
-                <p className="estoque__vazio">Nenhum produto encontrado no período</p>
+                <EstadoVazio titulo="Nenhum produto encontrado no período" descricao="Ajuste o período ou os filtros para ver resultados." />
               ) : (
                 <TabelaEstoque tipo={visaoAtual.tipo} titulo={visaoAtual.titulo} itens={itens} />
               )}
             </>
           )}
         </section>
-      </main>
+      </div>
     </div>
   );
 }

@@ -16,6 +16,10 @@ function preencherEEnviar(usuario, senha) {
   fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
 }
 
+function abrirConfiguracoes() {
+  fireEvent.click(screen.getByRole('button', { name: 'Configurações' }));
+}
+
 describe('LoginPage', () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -49,12 +53,14 @@ describe('LoginPage', () => {
 
   it('o campo Servidor vem preenchido com a URL atual', () => {
     render(<LoginPage onSuccess={vi.fn()} />);
+    abrirConfiguracoes();
 
     expect(screen.getByLabelText('Servidor')).toHaveValue('http://localhost:3001');
   });
 
   it('exibe texto de ajuda fixo sobre conteúdo inseguro (http em página https) junto ao campo Servidor', () => {
     render(<LoginPage onSuccess={vi.fn()} />);
+    abrirConfiguracoes();
 
     const ajuda = screen.getByText(/conteúdo inseguro/i);
     expect(ajuda).toHaveTextContent('chrome://settings/content/insecureContent');
@@ -78,6 +84,7 @@ describe('LoginPage', () => {
   it('URL de servidor inválida mostra erro de URL sem consultar o servidor', async () => {
     render(<LoginPage onSuccess={vi.fn()} />);
 
+    abrirConfiguracoes();
     fireEvent.change(screen.getByLabelText('Servidor'), { target: { value: 'servidor:3001' } });
     preencherEEnviar('gestor', 'segredo');
 
@@ -90,6 +97,7 @@ describe('LoginPage', () => {
     authService.login.mockResolvedValue({ token: 'abc' });
     render(<LoginPage onSuccess={vi.fn()} />);
 
+    abrirConfiguracoes();
     fireEvent.change(screen.getByLabelText('Servidor'), { target: { value: 'http://novo:3001/' } });
     preencherEEnviar('gestor', 'segredo');
 
@@ -107,5 +115,87 @@ describe('LoginPage', () => {
 
     await waitFor(() => expect(authService.login).toHaveBeenCalled());
     expect(authService.logout).not.toHaveBeenCalled();
+  });
+
+  it('o botão Configurações abre e fecha o painel do Servidor, fechado por padrão', () => {
+    render(<LoginPage onSuccess={vi.fn()} />);
+
+    const botao = screen.getByRole('button', { name: 'Configurações' });
+    expect(botao).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByLabelText('Servidor')).not.toBeInTheDocument();
+
+    fireEvent.click(botao);
+    expect(botao).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByLabelText('Servidor')).toBeInTheDocument();
+
+    fireEvent.click(botao);
+    expect(screen.queryByLabelText('Servidor')).not.toBeInTheDocument();
+  });
+
+  it('Salvar servidor valida via /health e grava a URL normalizada sem fazer login', async () => {
+    render(<LoginPage onSuccess={vi.fn()} />);
+
+    abrirConfiguracoes();
+    fireEvent.change(screen.getByLabelText('Servidor'), { target: { value: 'http://novo:3001/' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar servidor' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Servidor salvo');
+    expect(apiUrlService.validarServidor).toHaveBeenCalledWith('http://novo:3001');
+    expect(localStorage.getItem('apiUrl')).toBe('http://novo:3001');
+    expect(authService.logout).toHaveBeenCalled();
+    expect(authService.login).not.toHaveBeenCalled();
+  });
+
+  it('Salvar servidor com URL inválida mostra erro e não grava', async () => {
+    render(<LoginPage onSuccess={vi.fn()} />);
+
+    abrirConfiguracoes();
+    fireEvent.change(screen.getByLabelText('Servidor'), { target: { value: 'servidor:3001' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar servidor' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/URL.*inválida/i);
+    expect(apiUrlService.validarServidor).not.toHaveBeenCalled();
+    expect(localStorage.getItem('apiUrl')).toBeNull();
+  });
+
+  it('Salvar servidor inacessível mostra o erro e não grava', async () => {
+    apiUrlService.validarServidor.mockRejectedValue(new Error('Servidor inacessível.'));
+    render(<LoginPage onSuccess={vi.fn()} />);
+
+    abrirConfiguracoes();
+    fireEvent.change(screen.getByLabelText('Servidor'), { target: { value: 'http://fora:3001' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar servidor' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Servidor inacessível.');
+    expect(localStorage.getItem('apiUrl')).toBeNull();
+  });
+
+  it('erro de servidor no login abre o painel de Configurações para o usuário corrigir', async () => {
+    apiUrlService.validarServidor.mockRejectedValue(new Error('Servidor inacessível.'));
+    render(<LoginPage onSuccess={vi.fn()} />);
+
+    preencherEEnviar('gestor', 'segredo');
+    await screen.findByRole('alert');
+
+    expect(screen.getByRole('button', { name: 'Configurações' })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByLabelText('Servidor')).toBeInTheDocument();
+  });
+
+  it('erro de credenciais (servidor ok) não abre o painel de Configurações', async () => {
+    authService.login.mockRejectedValue(new Error('Usuário ou senha inválidos.'));
+    render(<LoginPage onSuccess={vi.fn()} />);
+
+    preencherEEnviar('gestor', 'errada');
+    await screen.findByRole('alert');
+
+    expect(screen.getByRole('button', { name: 'Configurações' })).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('tem painel de marca com o título do sistema ao lado do formulário (duas colunas)', () => {
+    const { container } = render(<LoginPage onSuccess={vi.fn()} />);
+
+    expect(screen.getByRole('heading', { level: 1, name: 'GestãoEverSoftPlus' })).toBeInTheDocument();
+    expect(container.querySelector('.login__marca-painel')).not.toBeNull();
+    expect(container.querySelector('.login__form-painel')).not.toBeNull();
   });
 });

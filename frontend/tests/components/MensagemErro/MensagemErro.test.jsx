@@ -27,4 +27,21 @@ describe('MensagemErro', () => {
     expect(screen.getByText('Em breve.')).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
+
+  it('usa as classes compartilhadas (variantes erro, atencao e info) além das classes do prefixo', () => {
+    const { rerender } = render(<MensagemErro prefixo="tela" erro={{ tipo: 'generico', mensagem: 'x' }} />);
+    expect(screen.getByRole('alert')).toHaveClass('mensagem-erro', 'mensagem-erro--erro');
+
+    rerender(<MensagemErro prefixo="tela" erro={{ tipo: 'nao-preparado', mensagem: 'x' }} />);
+    expect(screen.getByRole('alert')).toHaveClass('mensagem-erro', 'mensagem-erro--atencao');
+
+    rerender(<MensagemErro prefixo="tela" erro={{ tipo: 'indisponivel', mensagem: 'x' }} />);
+    expect(screen.getByRole('status')).toHaveClass('mensagem-erro', 'mensagem-erro--info');
+  });
+
+  it('funciona sem prefixo', () => {
+    render(<MensagemErro erro={{ tipo: 'generico', mensagem: 'Falha.' }} />);
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Falha.');
+  });
 });

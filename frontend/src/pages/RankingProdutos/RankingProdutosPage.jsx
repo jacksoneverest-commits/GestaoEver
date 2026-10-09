@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import CampoQuantidade from '../../components/CampoQuantidade/CampoQuantidade.jsx';
+import EstadoVazio from '../../components/EstadoVazio/EstadoVazio.jsx';
+import Skeleton from '../../components/Skeleton/Skeleton.jsx';
 import MensagemErro from '../../components/MensagemErro/MensagemErro.jsx';
 import PeriodFilter from '../../components/PeriodFilter/PeriodFilter.jsx';
 import {
@@ -13,6 +15,7 @@ import { formatDecimal, formatPercent, formatPercentualDuasCasas, formatQuantida
 import { classificarErro } from '../../utils/erroApi.js';
 import { interpretarLimite } from '../../utils/limite.js';
 import { periodoUltimosDiasAteOntem } from '../../utils/periodo.js';
+import PageHeader from '../../components/PageHeader/PageHeader.jsx';
 import './RankingProdutosPage.css';
 
 // Crescimento/queda/novos só consideram dias fechados: o período padrão termina ONTEM, não hoje.
@@ -178,7 +181,7 @@ function TabelaRanking({ visao, titulo, itens }) {
   );
 }
 
-function RankingProdutosPage({ onLogout }) {
+function RankingProdutosPage() {
   const [periodo, setPeriodo] = useState(() => periodoUltimosDiasAteOntem(DIAS_PERIODO_PADRAO));
   const [visao, setVisao] = useState('vendas');
   const [ordenarPor, setOrdenarPor] = useState('lucro');
@@ -246,15 +249,9 @@ function RankingProdutosPage({ onLogout }) {
 
   return (
     <div className="ranking">
-      <header className="ranking__topo">
-        <div>
-          <a className="ranking__voltar" href="#/">Voltar ao painel</a>
-          <h1 className="ranking__titulo">Ranking de Produtos</h1>
-        </div>
-        <button type="button" className="ranking__sair" onClick={onLogout}>Sair</button>
-      </header>
+      <PageHeader titulo="Ranking de Produtos" />
 
-      <main className="ranking__conteudo">
+      <div className="ranking__conteudo">
         <section aria-labelledby="ranking-filtros" className="ranking__filtros">
           <h2 id="ranking-filtros" className="ranking__secao-titulo">Filtros</h2>
           <div className="ranking__filtros-campos">
@@ -298,15 +295,13 @@ function RankingProdutosPage({ onLogout }) {
         <section aria-labelledby="ranking-resultado">
           <h2 id="ranking-resultado" className="ranking__secao-titulo">{visaoAtual.titulo}</h2>
 
-          {carregando && (
-            <p role="status" aria-live="polite" className="ranking__carregando">Carregando ranking...</p>
-          )}
+          {carregando && <Skeleton rotulo="Carregando ranking..." tamanho="bloco" />}
           {erro && <MensagemErro prefixo="ranking" erro={erro} />}
 
           {!carregando && !erro && dados && (
             <>
               {periodoAjustado && (
-                <p role="status" className="ranking__aviso ranking__aviso--atencao">
+                <p role="status" className="mensagem-erro mensagem-erro--atencao">
                   {`Período ajustado até ${formatDate(dados.fim)}: só dias encerrados`}
                 </p>
               )}
@@ -317,14 +312,14 @@ function RankingProdutosPage({ onLogout }) {
               )}
               {listaLimitada && <p className="ranking__detalhe">{`Exibindo os ${dados.limite} primeiros produtos`}</p>}
               {itens.length === 0 ? (
-                <p className="ranking__vazio">Nenhum produto encontrado para o período e critério selecionados.</p>
+                <EstadoVazio titulo="Nenhum produto encontrado para o período e critério selecionados." descricao="Ajuste o período ou o critério para ver resultados." />
               ) : (
                 <TabelaRanking visao={visao} titulo={visaoAtual.titulo} itens={itens} />
               )}
             </>
           )}
         </section>
-      </main>
+      </div>
     </div>
   );
 }

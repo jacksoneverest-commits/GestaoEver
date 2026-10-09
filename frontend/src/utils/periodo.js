@@ -19,3 +19,9 @@ export function periodoUltimosDiasAteOntem(dias, agora = new Date()) {
   const ontem = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() - 1);
   return periodoUltimosDias(dias, ontem);
 }
+
+// Do dia 1 do mês de `agora` até `agora`: periodoMesAtual(24/09) -> 01/09 a 24/09.
+export function periodoMesAtual(agora = new Date()) {
+  const primeiro = new Date(agora.getFullYear(), agora.getMonth(), 1);
+  return { inicio: paraIsoLocal(primeiro), fim: paraIsoLocal(agora) };
+}

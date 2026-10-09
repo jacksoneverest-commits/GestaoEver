@@ -1,0 +1,43 @@
+.dashboard { display: flex; flex-direction: column; gap: var(--esp-5); }
+.dashboard .page-header { margin-bottom: 0; }
+
+.dashboard__atalhos-periodo { display: inline-flex; border: 1px solid var(--cor-borda-forte); border-radius: var(--raio-md); overflow: hidden; background: var(--cor-superficie); }
+.dashboard__atalho-periodo {
+  min-height: var(--alvo-toque);
+  padding: 0 var(--esp-4);
+  border: 0;
+  background: transparent;
+  color: var(--cor-texto);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.dashboard__atalho-periodo + .dashboard__atalho-periodo { border-left: 1px solid var(--cor-borda); }
+.dashboard__atalho-periodo[aria-pressed='true'] { background: var(--cor-primaria); color: var(--cor-texto-sobre-cor); font-weight: 600; }
+
+.dashboard__periodo { padding: var(--esp-4); background: var(--cor-superficie); border: 1px solid var(--cor-borda); border-radius: var(--raio-lg); }
+
+.dashboard__kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--esp-4); }
+.dashboard__erro-bloco { grid-column: 1 / -1; }
+.dashboard__secao-titulo { margin: 0 0 var(--esp-3); font-size: var(--fs-md); font-weight: 600; }
+.dashboard__grade { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--esp-4); }
+.dashboard__modulo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  height: 100%;
+  padding: var(--esp-4) var(--esp-5);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-lg);
+  box-shadow: var(--sombra-card);
+  color: var(--cor-texto);
+  text-decoration: none;
+}
+a.dashboard__modulo:hover { border-color: var(--cor-primaria); }
+a.dashboard__modulo { color: var(--cor-texto); }
+.dashboard__modulo > svg { color: var(--cor-primaria); }
+.dashboard__modulo-nome { font-weight: 600; }
+.dashboard__modulo-desc { font-size: var(--fs-sm); color: var(--cor-texto-suave); }
+.dashboard__modulo--desabilitado { cursor: not-allowed; }
+.dashboard__modulo--desabilitado > svg { color: var(--cor-texto-suave); }
+.dashboard__em-breve { align-self: flex-start; padding: 2px var(--esp-2); border: 1px solid var(--cor-borda); border-radius: var(--raio-pill); font-size: var(--fs-xs); color: var(--cor-texto-suave); }

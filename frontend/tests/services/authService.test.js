@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { getToken, login, logout } from '../../src/services/authService.js';
+import { getToken, getUsuarioAtual, login, logout } from '../../src/services/authService.js';
 
 function respostaJson(status, corpo) {
   return { ok: status >= 200 && status < 300, status, json: () => Promise.resolve(corpo) };
@@ -44,5 +44,18 @@ describe('authService', () => {
 
     await expect(login({ usuario: 'x', senha: 'y' })).rejects.toThrow('Usuário ou senha inválidos.');
     expect(getToken()).toBeNull();
+  });
+
+  it('getUsuarioAtual lê o nome de usuário do payload do token (só para exibição)', () => {
+    const payload = btoa(JSON.stringify({ sub: 1, usuario: 'gestor', perfil: 'gestor' })).replace(/=+$/, '');
+    localStorage.setItem('token', payload + '.assinatura');
+
+    expect(getUsuarioAtual()).toBe('gestor');
+  });
+
+  it('getUsuarioAtual devolve null sem token ou com token malformado', () => {
+    expect(getUsuarioAtual()).toBeNull();
+    localStorage.setItem('token', 'lixo');
+    expect(getUsuarioAtual()).toBeNull();
   });
 });

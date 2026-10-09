@@ -421,6 +421,20 @@
 
 ---
 
+## Sprint 7 — Redesign visual do frontend (UI)
+
+### Fase UI — Redesign (AppShell, tokens, KpiCard, home com KPIs, reestilização dos módulos)
+> Plano detalhado, decisões e fases U.0 a U.6: `docs/plano-redesign-ui.md`. Apenas frontend; sem dependência nova; sem alteração de backend/SPEC.
+- [x] U.0 Preparação (viewport e Poppins em `index.html`)
+- [x] U.1 Design tokens (`frontend/src/styles/tokens.css` e `base.css`)
+- [x] U.2 Componentes base (Icon, AppShell, BuscaModulos, AvatarMenu, KpiCard, PageHeader, EstadoVazio, Skeleton)
+- [x] U.3 Integração no App (AppShell envolvendo as páginas autenticadas)
+- [x] U.4 Home com KPIs reais
+- [x] U.5 Reestilização dos módulos
+- [x] U.6 Verificação e entrega — itens de código concluídos (correções da auditoria final; npm test e build passam). Pendente fora do código: conferência visual manual com a aplicação rodando
+
+---
+
 ## Resumo de paralelismo e agents
 
 **Tasks que rodam em paralelo (mesma fase, arquivos independentes):**

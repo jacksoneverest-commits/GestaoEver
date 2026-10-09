@@ -1,0 +1,96 @@
+/*
+ * Design tokens globais (Fase U.1 do docs/plano-redesign-ui.md).
+ * Breakpoints (documentados; CSS não aceita var() em media query):
+ *   mobile < 900px (sidebar vira gaveta) | desktop >= 900px | compacto <= 600px.
+ * Contraste do texto branco sobre os gradientes dos KPIs: todos os tons >= 5:1 (WCAG AA exige 4,5:1).
+ */
+:root {
+  /* Cores base */
+  --cor-fundo: #f4f7fb;
+  --cor-superficie: #ffffff;
+  --cor-borda: #e3e8f0;
+  --cor-texto: #1b2236;
+  --cor-texto-suave: #5b6477;
+  --cor-borda-forte: #7d889e; /* bordas de controles: >= 3:1 (WCAG 1.4.11) */
+  --cor-grade-grafico: #d5dbe7;
+  --cor-overlay: rgba(27, 34, 54, 0.45);
+  --cor-skeleton-base: #e8edf5;
+  --cor-skeleton-brilho: #f3f6fb;
+  --cor-cursor-grafico: rgba(67, 97, 238, 0.08);
+  --cor-primaria: #4361ee;
+  --cor-primaria-escura: #3a50d9;
+  --cor-primaria-fundo: #eef1fe;
+  --cor-texto-sobre-cor: #ffffff;
+
+  /* Estados */
+  --cor-positivo: #047857;
+  --cor-negativo: #b91c1c;
+  --cor-negativo-fundo: #fef2f2;
+  --cor-negativo-borda: #fecaca;
+  --cor-aviso: #92400e;
+  --cor-aviso-fundo: #fffbeb;
+
+  --cor-aviso-borda: #fcd34d;
+  --cor-aviso-fundo-forte: #fef3c7;
+  --cor-aviso-destaque: #f59e0b;
+  --cor-info: #1e40af;
+  --cor-info-fundo: #eff6ff;
+  --cor-info-borda: #bfdbfe;
+  --cor-sucesso-texto: #166534;
+  --cor-sucesso-fundo: #dcfce7;
+  --cor-sucesso-borda: #86efac;
+  --cor-sucesso-fundo-suave: #f0fdf4;
+  --cor-sucesso-borda-suave: #bbf7d0;
+  --cor-negativo-texto-escuro: #991b1b;
+  --cor-negativo-fundo-forte: #fee2e2;
+  --cor-negativo-borda-forte: #fca5a5;
+  --cor-zebra: #f8fafd;
+
+  /* Gradientes dos KPIs (texto branco >= 5:1) */
+  --grad-azul: linear-gradient(135deg, #4361ee 0%, #3a50d9 100%);
+  --grad-ambar: linear-gradient(135deg, #b45309 0%, #a14a08 100%);
+  --grad-ciano: linear-gradient(135deg, #0e7490 0%, #0b6a85 100%);
+  --grad-verde: linear-gradient(135deg, #15803d 0%, #047857 100%);
+
+  /* Raios e sombras */
+  --raio-xs: 4px;
+  --raio-sm: 8px;
+  --raio-md: 12px;
+  --raio-lg: 16px;
+  --raio-pill: 999px;
+  --sombra-card: 0 2px 8px rgba(27, 34, 54, 0.06);
+  --sombra-elevada: 0 8px 24px rgba(27, 34, 54, 0.14);
+
+  /* Espaçamentos */
+  --esp-1: 4px;
+  --esp-2: 8px;
+  --esp-3: 12px;
+  --esp-4: 16px;
+  --esp-5: 24px;
+  --esp-6: 32px;
+
+  /* Tipografia */
+  --fonte: 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.25rem;
+  --fs-xl: 1.5rem;
+  --fs-2xl: 2rem;
+
+  /* Layout */
+  --sidebar-largura: 248px;
+  --topbar-altura: 64px;
+  --alvo-toque: 44px;
+
+  /* Gráficos (VendasCharts) alinhados aos tokens */
+  --vc-card: var(--cor-superficie);
+  --vc-borda: var(--cor-borda);
+  --vc-texto: var(--cor-texto);
+  --vc-texto-suave: var(--cor-texto-suave);
+  --vc-serie: var(--cor-primaria);
+  --vc-grade: var(--cor-grade-grafico);
+  --vc-cursor: var(--cor-cursor-grafico);
+  --vc-erro: var(--cor-negativo);
+  --vc-destaque-fundo: var(--cor-primaria-fundo);
+}

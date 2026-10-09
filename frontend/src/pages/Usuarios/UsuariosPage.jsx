@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import EstadoVazio from '../../components/EstadoVazio/EstadoVazio.jsx';
+import Skeleton from '../../components/Skeleton/Skeleton.jsx';
 import MensagemErro from '../../components/MensagemErro/MensagemErro.jsx';
 import { criarUsuario, listarUsuarios, resetarSenha, trocarMinhaSenha } from '../../services/usuariosService.js';
 import { classificarErro } from '../../utils/erroApi.js';
+import PageHeader from '../../components/PageHeader/PageHeader.jsx';
 import './UsuariosPage.css';
 
 // Perfis válidos do cadastro (Task 3.4): sem diferenciação de acesso entre eles nesta fase.
@@ -26,6 +29,20 @@ function LinhaUsuario({ usuario, resetAberto, onAbrirReset, onFecharReset, suces
   const [erro, setErro] = useState(null);
   const aberto = resetAberto === usuario.id;
   const idCampo = `usuarios-reset-senha-${usuario.id}`;
+  const campoRef = useRef(null);
+  const botaoRef = useRef(null);
+  const jaAbriu = useRef(false);
+
+  // Foco: ao abrir o reset vai para o campo da nova senha; ao fechar volta para o botão "Resetar senha".
+  useEffect(() => {
+    if (aberto) {
+      jaAbriu.current = true;
+      if (campoRef.current) campoRef.current.focus();
+    } else if (jaAbriu.current) {
+      jaAbriu.current = false;
+      if (botaoRef.current) botaoRef.current.focus();
+    }
+  }, [aberto]);
 
   const abrir = () => {
     setSenhaNova('');
@@ -58,7 +75,9 @@ function LinhaUsuario({ usuario, resetAberto, onAbrirReset, onFecharReset, suces
             <label htmlFor={idCampo}>{`Nova senha para ${usuario.usuario}`}</label>
             <input
               id={idCampo}
+              ref={campoRef}
               type="password"
+              autoComplete="new-password"
               value={senhaNova}
               onChange={(e) => setSenhaNova(e.target.value)}
               disabled={carregando}
@@ -71,24 +90,25 @@ function LinhaUsuario({ usuario, resetAberto, onAbrirReset, onFecharReset, suces
                 Cancelar
               </button>
             </div>
-            {erro && <p role="alert" className="usuarios__erro">{erro}</p>}
+            {erro && <MensagemErro erro={{ tipo: 'generico', mensagem: erro }} />}
           </div>
         ) : (
-          <button type="button" onClick={abrir}>Resetar senha</button>
+          <button type="button" ref={botaoRef} onClick={abrir}>Resetar senha</button>
         )}
         {!aberto && sucessoReset && sucessoReset.id === usuario.id && (
-          <p className="usuarios__sucesso">{`Senha de ${sucessoReset.usuario} redefinida com sucesso.`}</p>
+          <p role="status" className="usuarios__sucesso">{`Senha de ${sucessoReset.usuario} redefinida com sucesso.`}</p>
         )}
       </td>
     </tr>
   );
 }
 
-function UsuariosPage({ onLogout }) {
+function UsuariosPage() {
   const [usuariosState, setUsuariosState] = useState({ carregando: true, erro: null, lista: [] });
   const [cadastro, setCadastro] = useState(CADASTRO_INICIAL);
   const [cadastroCarregando, setCadastroCarregando] = useState(false);
   const [cadastroErro, setCadastroErro] = useState(null);
+  const [cadastroSucesso, setCadastroSucesso] = useState('');
 
   const [resetAberto, setResetAberto] = useState(null); // id do usuário com o formulário de reset aberto
   const [sucessoReset, setSucessoReset] = useState(null); // { id, usuario } da última redefinição concluída
@@ -118,9 +138,11 @@ function UsuariosPage({ onLogout }) {
     e.preventDefault();
     setCadastroCarregando(true);
     setCadastroErro(null);
+    setCadastroSucesso('');
     try {
       const usuarioCriado = await criarUsuario(cadastro);
       setUsuariosState((atual) => ({ ...atual, lista: [...atual.lista, usuarioCriado] }));
+      setCadastroSucesso(`Usuário ${usuarioCriado.usuario} cadastrado com sucesso.`);
       setCadastro(CADASTRO_INICIAL);
       setCadastroCarregando(false);
     } catch (e) {
@@ -156,25 +178,18 @@ function UsuariosPage({ onLogout }) {
 
   return (
     <div className="usuarios">
-      <header className="usuarios__topo">
-        <div>
-          <a className="usuarios__voltar" href="#/">Voltar ao painel</a>
-          <h1 className="usuarios__titulo">Usuários</h1>
-        </div>
-        <button type="button" className="usuarios__sair" onClick={onLogout}>Sair</button>
-      </header>
+      <PageHeader titulo="Usuários" />
 
-      <main className="usuarios__conteudo">
+      <div className="usuarios__conteudo">
         <section aria-labelledby="usuarios-lista-titulo">
           <h2 id="usuarios-lista-titulo" className="usuarios__secao-titulo">Usuários cadastrados</h2>
-          {usuariosState.carregando && (
-            <p role="status" aria-live="polite" className="usuarios__carregando">Carregando usuários...</p>
-          )}
+          {usuariosState.carregando && <Skeleton rotulo="Carregando usuários..." tamanho="bloco" />}
           {usuariosState.erro && <MensagemErro prefixo="usuarios" erro={usuariosState.erro} />}
           {!usuariosState.carregando && !usuariosState.erro && (
             usuariosState.lista.length === 0 ? (
-              <p className="usuarios__vazio">Nenhum usuário cadastrado.</p>
+              <EstadoVazio titulo="Nenhum usuário cadastrado." descricao="Use o formulário abaixo para cadastrar o primeiro usuário." />
             ) : (
+              <div className="usuarios__tabela-wrapper" role="region" aria-label="Tabela de usuários" tabIndex={0}>
               <table className="usuarios__tabela">
                 <thead>
                   <tr>
@@ -198,6 +213,7 @@ function UsuariosPage({ onLogout }) {
                   ))}
                 </tbody>
               </table>
+              </div>
             )
           )}
         </section>
@@ -230,6 +246,7 @@ function UsuariosPage({ onLogout }) {
               <input
                 id="usuarios-cadastro-senha"
                 type="password"
+                autoComplete="new-password"
                 required
                 value={cadastro.senha}
                 onChange={(e) => setCadastro({ ...cadastro, senha: e.target.value })}
@@ -249,7 +266,8 @@ function UsuariosPage({ onLogout }) {
             </div>
             <button type="submit" disabled={cadastroCarregando}>Cadastrar usuário</button>
           </form>
-          {cadastroErro && <p role="alert" className="usuarios__erro">{cadastroErro}</p>}
+          {cadastroErro && <MensagemErro erro={{ tipo: 'generico', mensagem: cadastroErro }} />}
+          {cadastroSucesso && <p role="status" className="usuarios__sucesso">{cadastroSucesso}</p>}
         </section>
 
         <section aria-labelledby="usuarios-trocar-senha-titulo">
@@ -260,6 +278,7 @@ function UsuariosPage({ onLogout }) {
               <input
                 id="usuarios-senha-atual"
                 type="password"
+                autoComplete="current-password"
                 required
                 value={trocarSenhaForm.senhaAtual}
                 onChange={(e) => setTrocarSenhaForm({ ...trocarSenhaForm, senhaAtual: e.target.value })}
@@ -270,6 +289,7 @@ function UsuariosPage({ onLogout }) {
               <input
                 id="usuarios-senha-nova"
                 type="password"
+                autoComplete="new-password"
                 required
                 value={trocarSenhaForm.senhaNova}
                 onChange={(e) => setTrocarSenhaForm({ ...trocarSenhaForm, senhaNova: e.target.value })}
@@ -277,10 +297,10 @@ function UsuariosPage({ onLogout }) {
             </div>
             <button type="submit" disabled={trocarSenhaCarregando}>Trocar minha senha</button>
           </form>
-          {trocarSenhaErro && <p role="alert" className="usuarios__erro">{trocarSenhaErro}</p>}
-          {trocarSenhaSucesso && <p className="usuarios__sucesso">Senha alterada com sucesso.</p>}
+          {trocarSenhaErro && <MensagemErro erro={{ tipo: 'generico', mensagem: trocarSenhaErro }} />}
+          {trocarSenhaSucesso && <p role="status" className="usuarios__sucesso">Senha alterada com sucesso.</p>}
         </section>
-      </main>
+      </div>
     </div>
   );
 }
