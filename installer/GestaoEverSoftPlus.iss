@@ -126,7 +126,7 @@ begin
   PaginaApi.Add('Porta da API:', False);
   PaginaApi.Add('Origem(ns) permitida(s) (CORS_ORIGINS):', False);
   PaginaApi.Values[0] := ExpandConstant('{param:PORTA|3001}');
-  PaginaApi.Values[1] := ExpandConstant('{param:CORS|}');
+  PaginaApi.Values[1] := ExpandConstant('{param:CORS|https://gestao-ever.vercel.app}');
 
   PaginaMigrations := CreateInputOptionPage(PaginaApi.ID, 'Banco de dados',
     'Migrations (tabelas da aplicacao)',
