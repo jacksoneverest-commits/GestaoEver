@@ -1,5 +1,7 @@
 import { useEffect, useId, useState } from 'react';
 import CampoQuantidade from '../../components/CampoQuantidade/CampoQuantidade.jsx';
+import EstadoVazio from '../../components/EstadoVazio/EstadoVazio.jsx';
+import Skeleton from '../../components/Skeleton/Skeleton.jsx';
 import MensagemErro from '../../components/MensagemErro/MensagemErro.jsx';
 import PeriodFilter from '../../components/PeriodFilter/PeriodFilter.jsx';
 import { listarItens, obterCurvaAbc } from '../../services/curvaAbcService.js';
@@ -8,6 +10,7 @@ import { formatInteger, formatPercentualDuasCasas } from '../../utils/formatNumb
 import { classificarErro } from '../../utils/erroApi.js';
 import { interpretarLimite } from '../../utils/limite.js';
 import { periodoUltimosDiasAteOntem } from '../../utils/periodo.js';
+import PageHeader from '../../components/PageHeader/PageHeader.jsx';
 import './CurvaAbcPage.css';
 
 // Dias fechados: o período padrão termina ONTEM (mesmo padrão do Ranking de Produtos).
@@ -298,7 +301,7 @@ function TabelaCurva({ dimensao, titulo, itens }) {
   );
 }
 
-function CurvaAbcPage({ onLogout }) {
+function CurvaAbcPage() {
   const [periodo, setPeriodo] = useState(() => periodoUltimosDiasAteOntem(DIAS_PERIODO_PADRAO));
   const [dimensao, setDimensao] = useState(DIMENSAO_PADRAO);
   const [item, setItem] = useState(null); // { id, nome } do item escolhido; null = "Todos"
@@ -364,15 +367,9 @@ function CurvaAbcPage({ onLogout }) {
 
   return (
     <div className="curva-abc">
-      <header className="curva-abc__topo">
-        <div>
-          <a className="curva-abc__voltar" href="#/">Voltar ao painel</a>
-          <h1 className="curva-abc__titulo">Curva ABC</h1>
-        </div>
-        <button type="button" className="curva-abc__sair" onClick={onLogout}>Sair</button>
-      </header>
+      <PageHeader titulo="Curva ABC" />
 
-      <main className="curva-abc__conteudo">
+      <div className="curva-abc__conteudo">
         <section aria-labelledby="curva-abc-filtros" className="curva-abc__filtros">
           <h2 id="curva-abc-filtros" className="curva-abc__secao-titulo">Filtros</h2>
           <div className="curva-abc__filtros-campos">
@@ -412,9 +409,7 @@ function CurvaAbcPage({ onLogout }) {
         <section aria-labelledby="curva-abc-resultado">
           <h2 id="curva-abc-resultado" className="curva-abc__secao-titulo">{titulo}</h2>
 
-          {carregando && (
-            <p role="status" aria-live="polite" className="curva-abc__carregando">Carregando curva ABC...</p>
-          )}
+          {carregando && <Skeleton rotulo="Carregando curva ABC..." tamanho="bloco" />}
           {erro && <MensagemErro prefixo="curva-abc" erro={erro} />}
 
           {!carregando && !erro && dados && (
@@ -426,14 +421,14 @@ function CurvaAbcPage({ onLogout }) {
                 <p className="curva-abc__detalhe">{`Exibindo os ${formatInteger(itens.length)} de ${formatInteger(totalItens)} itens`}</p>
               )}
               {itens.length === 0 ? (
-                <p className="curva-abc__vazio">Nenhum dado no período</p>
+                <EstadoVazio titulo="Nenhum dado no período" descricao="Ajuste o período ou os filtros para ver resultados." />
               ) : (
                 <TabelaCurva dimensao={dimensao} titulo={titulo} itens={itens} />
               )}
             </>
           )}
         </section>
-      </main>
+      </div>
     </div>
   );
 }

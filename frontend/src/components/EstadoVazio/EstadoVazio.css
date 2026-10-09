@@ -1,0 +1,9 @@
+.estado-vazio {
+  padding: var(--esp-5);
+  text-align: center;
+  border: 1px dashed var(--cor-borda);
+  border-radius: var(--raio-md);
+  background: var(--cor-superficie);
+}
+.estado-vazio__titulo { margin: 0; font-weight: 500; color: var(--cor-texto); }
+.estado-vazio__descricao { margin: var(--esp-1) 0 0; font-size: var(--fs-sm); color: var(--cor-texto-suave); }

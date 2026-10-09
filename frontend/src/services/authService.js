@@ -10,6 +10,21 @@ export function getToken() {
   }
 }
 
+// Nome de usuário lido do payload do token, apenas para exibição (avatar). Não valida assinatura:
+// a autorização é sempre do backend.
+export function getUsuarioAtual() {
+  const token = getToken();
+  if (!token) return null;
+  try {
+    const base64 = token.split('.')[0].replace(/-/g, '+').replace(/_/g, '/');
+    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    const payload = JSON.parse(new TextDecoder().decode(bytes));
+    return typeof payload.usuario === 'string' && payload.usuario ? payload.usuario : null;
+  } catch {
+    return null;
+  }
+}
+
 export function logout() {
   try {
     localStorage.removeItem(TOKEN_KEY);

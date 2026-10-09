@@ -14,6 +14,10 @@ import {
   obterVendasPorFormaPagamento,
   obterVendasPorHora,
 } from '../../../services/vendasGraficosService.js';
+import EstadoVazio from '../../../components/EstadoVazio/EstadoVazio.jsx';
+import MensagemErro from '../../../components/MensagemErro/MensagemErro.jsx';
+import Skeleton from '../../../components/Skeleton/Skeleton.jsx';
+import { classificarErro } from '../../../utils/erroApi.js';
 import { formatCurrency } from '../../../utils/format.js';
 import {
   formatCurrencyCompact,
@@ -22,6 +26,8 @@ import {
   formatPercentualSimples,
   formatQuantidade,
 } from '../../../utils/formatNumber.js';
+import { truncarRotulo } from '../../../utils/rotuloGrafico.js';
+import { useTelaEstreita } from '../../../utils/telaEstreita.js';
 import './VendasCharts.css';
 
 const NIVEIS = [
@@ -46,21 +52,21 @@ function temIdValido(id) {
 // Carrega dados de um gráfico de forma independente (carregando / erro / sucesso).
 // Respostas obsoletas (período trocado antes da resposta chegar) são ignoradas.
 function useDados(carregar, dependencias) {
-  const [estado, setEstado] = useState({ status: 'carregando', dados: null, erro: '' });
+  const [estado, setEstado] = useState({ status: 'carregando', dados: null, erro: null });
 
   useEffect(() => {
     let ativo = true;
-    setEstado({ status: 'carregando', dados: null, erro: '' });
+    setEstado({ status: 'carregando', dados: null, erro: null });
     (async () => {
       try {
         const dados = await carregar();
-        if (ativo) setEstado({ status: 'sucesso', dados, erro: '' });
+        if (ativo) setEstado({ status: 'sucesso', dados, erro: null });
       } catch (e) {
         if (ativo) {
           setEstado({
             status: 'erro',
             dados: null,
-            erro: e?.message || 'Não foi possível carregar este gráfico.',
+            erro: classificarErro(e, 'Não foi possível carregar este gráfico.'),
           });
         }
       }
@@ -111,19 +117,9 @@ function CartaoGrafico({
         {acoes}
       </div>
       {topo}
-      {estado.status === 'carregando' && (
-        <p className="vendas-charts__estado" aria-live="polite">
-          Carregando...
-        </p>
-      )}
-      {estado.status === 'erro' && (
-        <p role="alert" className="vendas-charts__erro">
-          {estado.erro}
-        </p>
-      )}
-      {estado.status === 'sucesso' && vazio && (
-        <p className="vendas-charts__estado">{mensagemVazio}</p>
-      )}
+      {estado.status === 'carregando' && <Skeleton rotulo={`Carregando ${titulo.toLowerCase()}...`} tamanho="bloco" />}
+      {estado.status === 'erro' && <MensagemErro prefixo="vendas-charts" erro={estado.erro} />}
+      {estado.status === 'sucesso' && vazio && <EstadoVazio titulo={mensagemVazio} />}
       {estado.status === 'sucesso' && !vazio && children}
     </section>
   );
@@ -154,24 +150,28 @@ function TabelaDados({ titulo, colunas, linhas }) {
 
 function GraficoBarras({ descricao, dados, layout = 'horizontal', altura = 280, larguraRotulo = 80, detalhes, aoClicar }) {
   const vertical = layout === 'vertical'; // barras horizontais, categorias no eixo Y
+  const estreita = useTelaEstreita();
+  // Em telas estreitas (<= 600px) o eixo de rótulos encolhe e os nomes longos são truncados com reticências.
+  const larguraEixo = estreita ? Math.min(larguraRotulo, vertical ? 96 : 64) : larguraRotulo;
+  const maxCaracteres = estreita ? 12 : 24;
   return (
     <div className="vendas-charts__grafico" role="img" aria-label={descricao}>
       <ResponsiveContainer width="100%" height={altura}>
         <BarChart
           data={dados}
           layout={layout}
-          margin={{ top: 8, right: 16, bottom: 4, left: 8 }}
+          margin={{ top: 8, right: estreita ? 8 : 16, bottom: 4, left: estreita ? 0 : 8 }}
         >
           <CartesianGrid stroke="var(--vc-grade)" strokeDasharray="3 3" horizontal={!vertical} vertical={vertical} />
           {vertical ? (
             <>
               <XAxis type="number" tick={ESTILO_EIXO} tickFormatter={formatCurrencyCompact} tickCount={4} stroke="var(--vc-grade)" />
-              <YAxis type="category" dataKey="rotulo" width={larguraRotulo} tick={ESTILO_EIXO} stroke="var(--vc-grade)" />
+              <YAxis type="category" dataKey="rotulo" width={larguraEixo} tick={ESTILO_EIXO} tickFormatter={(valor) => truncarRotulo(valor, maxCaracteres)} stroke="var(--vc-grade)" />
             </>
           ) : (
             <>
               <XAxis dataKey="rotuloEixo" tick={ESTILO_EIXO} interval="preserveStartEnd" stroke="var(--vc-grade)" />
-              <YAxis type="number" width={larguraRotulo} tick={ESTILO_EIXO} tickFormatter={formatCurrencyCompact} stroke="var(--vc-grade)" />
+              <YAxis type="number" width={larguraEixo} tick={ESTILO_EIXO} tickFormatter={formatCurrencyCompact} stroke="var(--vc-grade)" />
             </>
           )}
           <Tooltip

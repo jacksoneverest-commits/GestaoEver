@@ -95,6 +95,16 @@ describe('RankingProdutosPage', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
+  it('tem o título "Ranking de Produtos" e não renderiza mais o cabeçalho próprio (navegação e Sair ficam no AppShell)', async () => {
+    obterRanking.mockResolvedValue(respostaVendas);
+    render(<RankingProdutosPage />);
+    await screen.findByRole('table');
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Ranking de Produtos' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Voltar ao painel' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Sair' })).not.toBeInTheDocument();
+  });
+
   it('trocar o critério refaz a chamada à API e atualiza a tabela sem recarregar a página', async () => {
     obterRanking.mockImplementation(async ({ criterio }) => (criterio === 'faturamento' ? respostaFaturamento : respostaVendas));
     render(<RankingProdutosPage onLogout={() => {}} />);
@@ -113,7 +123,7 @@ describe('RankingProdutosPage', () => {
     obterRanking.mockReturnValue(new Promise(() => {}));
     render(<RankingProdutosPage onLogout={() => {}} />);
 
-    expect(screen.getByRole('status')).toHaveTextContent('Carregando ranking...');
+    expect(screen.getByRole('status', { name: 'Carregando ranking...' })).toBeInTheDocument();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 
@@ -898,7 +908,7 @@ describe('RankingProdutosPage - visão alta demanda / baixo estoque', () => {
 
     selecionarCriterio('demanda-baixo-estoque');
 
-    expect(await screen.findByText('Carregando ranking...')).toBeInTheDocument();
+    expect(await screen.findByRole('status', { name: 'Carregando ranking...' })).toBeInTheDocument();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 

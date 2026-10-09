@@ -568,7 +568,7 @@ describe('EstoquePage', () => {
     obterNiveis.mockReturnValue(new Promise(() => {}));
     render(<EstoquePage onLogout={() => {}} />);
 
-    expect(screen.getByRole('status')).toHaveTextContent('Carregando estoque...');
+    expect(screen.getByRole('status', { name: 'Carregando estoque...' })).toBeInTheDocument();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 
@@ -677,15 +677,13 @@ describe('EstoquePage', () => {
     expect(within(regiao).getByRole('rowheader', { name: 'Arroz Tipo 1 5kg' })).toHaveAttribute('scope', 'row');
   });
 
-  it('tem o título "Estoque Inteligente", link para voltar ao painel e botão Sair', async () => {
-    const onLogout = vi.fn();
-    render(<EstoquePage onLogout={onLogout} />);
+  it('tem o título "Estoque Inteligente" e não renderiza mais o cabeçalho próprio (navegação e Sair ficam no AppShell)', async () => {
+    render(<EstoquePage />);
     await screen.findByRole('table');
 
     expect(screen.getByRole('heading', { level: 1, name: 'Estoque Inteligente' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Voltar ao painel' })).toHaveAttribute('href', '#/');
-    fireEvent.click(screen.getByRole('button', { name: 'Sair' }));
-    expect(onLogout).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('link', { name: 'Voltar ao painel' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Sair' })).not.toBeInTheDocument();
   });
 });
 

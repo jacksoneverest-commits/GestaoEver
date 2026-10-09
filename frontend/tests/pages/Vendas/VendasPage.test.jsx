@@ -67,11 +67,31 @@ describe('VendasPage', () => {
     expect(screen.queryByText('Meta não configurada')).not.toBeInTheDocument();
   });
 
+  it('os 4 indicadores principais usam o KpiCard (Faturamento, Ticket médio, Cupons, Itens por compra)', async () => {
+    obterFaturamento.mockResolvedValue(respostaBase);
+    const { container } = render(<VendasPage />);
+    await screen.findByText(moeda(125430.5));
+
+    expect(container.querySelectorAll('.kpi-card')).toHaveLength(4);
+    expect(screen.getByRole('heading', { level: 3, name: 'Ticket médio' })).toBeInTheDocument();
+  });
+
+  it('503 mostra o estado "dados ainda não preparados" e 501 mostra "Ainda indisponível" (MensagemErro)', async () => {
+    obterFaturamento.mockRejectedValue(Object.assign(new Error('Execute o job de agregação.'), { status: 503 }));
+    const { unmount } = render(<VendasPage />);
+    expect(await screen.findByRole('alert')).toHaveTextContent('Dados desse período ainda não foram preparados');
+    unmount();
+
+    obterFaturamento.mockRejectedValue(Object.assign(new Error('Sem fonte de dados.'), { status: 501 }));
+    render(<VendasPage />);
+    expect(await screen.findByText('Ainda indisponível')).toBeInTheDocument();
+  });
+
   it('exibe estado de carregando enquanto a requisição está pendente', async () => {
     obterFaturamento.mockReturnValue(new Promise(() => {}));
     render(<VendasPage onLogout={() => {}} />);
 
-    expect(screen.getByRole('status')).toHaveTextContent(/carregando/i);
+    expect(screen.getByRole('status', { name: /carregando/i })).toBeInTheDocument();
   });
 
   it('exibe "Sem comparativo disponível" quando o comparativo é null', async () => {
@@ -106,14 +126,13 @@ describe('VendasPage', () => {
     expect(obterFaturamento).toHaveBeenCalledTimes(2);
   });
 
-  it('tem link para voltar ao painel e botão Sair', async () => {
+  it('tem o título "Vendas e Faturamento" e não renderiza mais o cabeçalho próprio (navegação e Sair ficam no AppShell)', async () => {
     obterFaturamento.mockResolvedValue(respostaBase);
-    const onLogout = vi.fn();
-    render(<VendasPage onLogout={onLogout} />);
+    render(<VendasPage />);
     await screen.findByText(moeda(125430.5));
 
-    expect(screen.getByRole('link', { name: 'Voltar ao painel' })).toHaveAttribute('href', '#/');
-    fireEvent.click(screen.getByRole('button', { name: 'Sair' }));
-    expect(onLogout).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('heading', { level: 1, name: 'Vendas e Faturamento' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Voltar ao painel' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Sair' })).not.toBeInTheDocument();
   });
 });

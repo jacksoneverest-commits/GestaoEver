@@ -161,7 +161,16 @@ describe('VendasCharts', () => {
     obterVendasPorHora.mockReturnValue(new Promise(() => {}));
     render(<VendasCharts inicio={INICIO} fim={FIM} />);
 
-    expect(screen.getAllByText(/carregando/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('status', { name: /carregando/i }).length).toBeGreaterThan(0);
+  });
+
+  it('503 em um gráfico mostra o estado "dados não preparados" apenas nele', async () => {
+    obterVendasPorHora.mockRejectedValue(Object.assign(new Error('Execute o job de agregação.'), { status: 503 }));
+    render(<VendasCharts inicio={INICIO} fim={FIM} />);
+
+    const alerta = await screen.findByRole('alert');
+    expect(alerta).toHaveTextContent('Dados desse período ainda não foram preparados');
+    expect(screen.getAllByRole('alert')).toHaveLength(1);
   });
 
   it('mostra erro apenas no gráfico que falhou, sem derrubar os demais', async () => {

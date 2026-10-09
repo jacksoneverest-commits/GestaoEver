@@ -6,6 +6,7 @@ import { obterFaturamento } from '../src/services/vendasService.js';
 import { obterRanking } from '../src/services/rankingProdutosService.js';
 import { listarItens, obterCurvaAbc } from '../src/services/curvaAbcService.js';
 import { obterNiveis } from '../src/services/estoqueService.js';
+import { listarUsuarios } from '../src/services/usuariosService.js';
 
 vi.mock('../src/services/authService.js');
 vi.mock('../src/services/apiUrlService.js', async (importOriginal) => ({
@@ -16,12 +17,21 @@ vi.mock('../src/services/vendasService.js');
 vi.mock('../src/services/rankingProdutosService.js');
 vi.mock('../src/services/curvaAbcService.js');
 vi.mock('../src/services/estoqueService.js');
+vi.mock('../src/services/usuariosService.js');
 vi.mock('../src/pages/Vendas/components/VendasCharts.jsx', () => ({ default: () => null }));
 
 describe('App', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     window.location.hash = '';
+    // O dashboard (home) carrega os indicadores de vendas ao montar.
+    obterFaturamento.mockResolvedValue({
+      faturamento: 0,
+      ticketMedio: 0,
+      quantidadeCupons: 0,
+      itensPorCompra: 0,
+      comparativoPeriodoAnterior: null,
+    });
   });
 
   it('sem token, renderiza a tela de login em vez do dashboard', () => {
@@ -64,7 +74,7 @@ describe('App', () => {
     expect(screen.getByRole('link', { name: 'Vendas' })).toHaveAttribute('href', '#/vendas');
   });
 
-  it('autenticado em #/vendas, mostra a tela de Vendas e Voltar ao painel retorna ao dashboard', async () => {
+  it('autenticado em #/vendas, mostra a tela de Vendas e o link Dashboard da sidebar retorna ao dashboard', async () => {
     authService.getToken.mockReturnValue('abc');
     obterFaturamento.mockResolvedValue({
       faturamento: 100,
@@ -79,7 +89,8 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: 'Vendas e Faturamento' })).toBeInTheDocument();
     expect(await screen.findByText('Sem comparativo disponível')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('link', { name: 'Voltar ao painel' }));
+    expect(screen.queryByRole('link', { name: 'Voltar ao painel' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('link', { name: 'Dashboard' }));
     expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
   });
 
@@ -171,6 +182,47 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { name: 'Estoque Inteligente' })).toBeInTheDocument();
     expect(await screen.findByRole('rowheader', { name: 'Arroz Tipo 1 5kg' })).toBeInTheDocument();
+  });
+
+  it('autenticado, a sidebar permite ir de um módulo a qualquer outro em 1 clique e marca o módulo atual', async () => {
+    authService.getToken.mockReturnValue('abc');
+    listarUsuarios.mockResolvedValue({ usuarios: [] });
+    obterFaturamento.mockResolvedValue({
+      faturamento: 100,
+      ticketMedio: 10,
+      quantidadeCupons: 10,
+      itensPorCompra: 2,
+      comparativoPeriodoAnterior: null,
+    });
+    window.location.hash = '#/usuarios';
+    render(<App />);
+
+    expect(screen.getByRole('link', { name: 'Usuários' })).toHaveAttribute('aria-current', 'page');
+    fireEvent.click(screen.getByRole('link', { name: 'Vendas' }));
+    expect(await screen.findByRole('heading', { name: 'Vendas e Faturamento' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Vendas' })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('autenticado, o avatar mostra as iniciais do usuário vindas do authService', () => {
+    authService.getToken.mockReturnValue('abc');
+    authService.getUsuarioAtual.mockReturnValue('maria');
+    render(<App />);
+
+    expect(screen.getByRole('button', { name: /maria/ })).toHaveTextContent('MA');
+  });
+
+  it('sem token, o título do documento é o da tela de entrada', () => {
+    authService.getToken.mockReturnValue(null);
+    render(<App />);
+
+    expect(document.title).toBe('Entrar · GestãoEverSoftPlus');
+  });
+
+  it('sem token, não renderiza o AppShell (login fica fora do shell)', () => {
+    authService.getToken.mockReturnValue(null);
+    render(<App />);
+
+    expect(screen.queryByRole('navigation', { name: 'Módulos' })).not.toBeInTheDocument();
   });
 
   it('sem token, #/estoque continua exibindo o login', () => {

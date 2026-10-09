@@ -1,0 +1,12 @@
+.mensagem-erro {
+  margin: 0 0 var(--esp-3);
+  padding: var(--esp-3) var(--esp-4);
+  border-radius: var(--raio-md);
+  font-size: var(--fs-sm);
+  overflow-wrap: anywhere;
+}
+.mensagem-erro--erro { color: var(--cor-negativo); background: var(--cor-negativo-fundo); border: 1px solid var(--cor-negativo-borda); }
+.mensagem-erro--atencao { color: var(--cor-aviso); background: var(--cor-aviso-fundo); border: 1px solid var(--cor-aviso-borda); }
+.mensagem-erro--info { color: var(--cor-info); background: var(--cor-info-fundo); border: 1px solid var(--cor-info-borda); }
+.mensagem-erro__titulo { margin: 0; font-weight: 600; }
+.mensagem-erro__detalhe { margin: var(--esp-1) 0 0; }

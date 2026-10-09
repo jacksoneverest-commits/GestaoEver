@@ -151,6 +151,15 @@ describe('CurvaAbcPage', () => {
     vi.useRealTimers();
   });
 
+  it('tem o título "Curva ABC" e não renderiza mais o cabeçalho próprio (navegação e Sair ficam no AppShell)', async () => {
+    render(<CurvaAbcPage />);
+    await screen.findByRole('table');
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Curva ABC' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Voltar ao painel' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Sair' })).not.toBeInTheDocument();
+  });
+
   it('a tabela exibe a classificação A/B/C de venda, margem e estoque para cada item retornado', async () => {
     render(<CurvaAbcPage onLogout={() => {}} />);
 
@@ -427,7 +436,7 @@ describe('CurvaAbcPage', () => {
     obterCurvaAbc.mockReturnValue(new Promise(() => {}));
     render(<CurvaAbcPage onLogout={() => {}} />);
 
-    expect(screen.getByText('Carregando curva ABC...')).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Carregando curva ABC...' })).toBeInTheDocument();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 
@@ -664,7 +673,7 @@ describe('CurvaAbcPage - corrida de requisições e seletor de item', () => {
 
     fireEvent.click(radio('Fornecedor'));
 
-    await screen.findByText('Carregando curva ABC...');
+    await screen.findByRole('status', { name: 'Carregando curva ABC...' });
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
     expect(screen.queryByText('MERCEARIA')).not.toBeInTheDocument();
 

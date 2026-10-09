@@ -1,0 +1,14 @@
+.skeleton {
+  width: 100%;
+  border-radius: var(--raio-lg);
+  background: linear-gradient(90deg, var(--cor-skeleton-base) 25%, var(--cor-skeleton-brilho) 50%, var(--cor-skeleton-base) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-brilho 1.4s ease-in-out infinite;
+}
+@keyframes skeleton-brilho {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+.skeleton--linha { height: 24px; }
+.skeleton--card { height: 120px; }
+.skeleton--bloco { height: 280px; }

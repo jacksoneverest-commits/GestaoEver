@@ -1,0 +1,20 @@
+.kpi-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  min-height: 120px;
+  padding: var(--esp-4) var(--esp-5);
+  border-radius: var(--raio-lg);
+  box-shadow: var(--sombra-card);
+  color: var(--cor-texto-sobre-cor);
+}
+.kpi-card--azul { background: var(--grad-azul); }
+.kpi-card--ambar { background: var(--grad-ambar); }
+.kpi-card--ciano { background: var(--grad-ciano); }
+.kpi-card--verde { background: var(--grad-verde); }
+.kpi-card__topo { display: flex; justify-content: space-between; align-items: center; gap: var(--esp-2); }
+.kpi-card__rotulo { margin: 0; font-size: var(--fs-sm); font-weight: 500; }
+.kpi-card__icone { flex: none; }
+.kpi-card__valor { margin: 0; font-size: var(--fs-xl); font-weight: 600; overflow-wrap: anywhere; }
+.kpi-card__variacao { margin: 0; display: flex; gap: var(--esp-1); align-items: baseline; font-size: var(--fs-sm); font-weight: 500; }
+.kpi-card__detalhe { margin: 0; font-size: var(--fs-xs); }

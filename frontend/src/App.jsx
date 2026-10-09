@@ -6,7 +6,8 @@ import RankingProdutosPage from './pages/RankingProdutos/RankingProdutosPage.jsx
 import CurvaAbcPage from './pages/CurvaAbc/CurvaAbcPage.jsx';
 import EstoquePage from './pages/Estoque/EstoquePage.jsx';
 import UsuariosPage from './pages/Usuarios/UsuariosPage.jsx';
-import { getToken, logout } from './services/authService.js';
+import AppShell from './components/AppShell/AppShell.jsx';
+import { getToken, getUsuarioAtual, logout } from './services/authService.js';
 
 // Navegação mínima por hash (#/login e #/), sem dependência de roteador.
 function navegar(rota) {
@@ -24,7 +25,13 @@ function App() {
 
   const autenticado = Boolean(getToken());
 
-  // Rota protegida: sem token, sempre login. Com token, #/vendas mostra Vendas, #/ranking-produtos mostra o Ranking, #/curva-abc mostra a Curva ABC, #/estoque mostra o Estoque Inteligente, #/usuarios mostra a gestão de Usuários e qualquer outro hash mostra o dashboard.
+  useEffect(() => {
+    if (!autenticado) document.title = 'Entrar · GestãoEverSoftPlus';
+  }, [autenticado]);
+
+  // Rotas por hash (sem roteador): sem token, sempre o Login (fora do AppShell). Com token, a página abaixo é
+  // renderizada dentro do AppShell: #/vendas, #/ranking-produtos, #/curva-abc, #/estoque, #/usuarios; qualquer
+  // outro hash cai no Dashboard (home). O AppShell também atualiza document.title e o foco ao trocar de módulo.
   if (!autenticado) {
     return (
       <LoginPage
@@ -42,27 +49,20 @@ function App() {
     forcarRender((n) => n + 1);
   }
 
-  if (window.location.hash === '#/vendas') {
-    return <VendasPage onLogout={sair} />;
-  }
+  const rota = window.location.hash;
+  let pagina = <DashboardPage />;
+  if (rota === '#/vendas') pagina = <VendasPage />;
+  else if (rota === '#/ranking-produtos') pagina = <RankingProdutosPage />;
+  else if (rota === '#/curva-abc') pagina = <CurvaAbcPage />;
+  else if (rota === '#/estoque') pagina = <EstoquePage />;
+  else if (rota === '#/usuarios') pagina = <UsuariosPage />;
 
-  if (window.location.hash === '#/ranking-produtos') {
-    return <RankingProdutosPage onLogout={sair} />;
-  }
+  return (
+    <AppShell rotaAtual={rota} usuario={getUsuarioAtual()} onLogout={sair}>
+      {pagina}
+    </AppShell>
+  );
 
-  if (window.location.hash === '#/curva-abc') {
-    return <CurvaAbcPage onLogout={sair} />;
-  }
-
-  if (window.location.hash === '#/estoque') {
-    return <EstoquePage onLogout={sair} />;
-  }
-
-  if (window.location.hash === '#/usuarios') {
-    return <UsuariosPage onLogout={sair} />;
-  }
-
-  return <DashboardPage onLogout={sair} />;
 }
 
 export default App;
