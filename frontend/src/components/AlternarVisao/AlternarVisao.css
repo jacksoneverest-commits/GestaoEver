@@ -1,0 +1,19 @@
+.alternar-visao {
+  display: inline-flex;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-sm);
+  overflow: hidden;
+}
+.alternar-visao__opcao {
+  min-width: var(--alvo-toque);
+  min-height: var(--alvo-toque);
+  padding: 0 var(--esp-4);
+  font-size: var(--fs-sm);
+  color: var(--cor-texto);
+  background: var(--cor-superficie);
+  border: 0;
+  cursor: pointer;
+}
+.alternar-visao__opcao + .alternar-visao__opcao { border-left: 1px solid var(--cor-borda); }
+.alternar-visao__opcao--ativa { color: var(--cor-texto-sobre-cor); font-weight: 600; background: var(--cor-primaria); }
+.alternar-visao__opcao:focus-visible { outline-offset: -2px; }

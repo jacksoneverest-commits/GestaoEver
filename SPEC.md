@@ -28,6 +28,7 @@ Primeira etapa do projeto, construída por fases sobre os seguintes tópicos:
    - Vendas por dia da semana
    - Vendas por departamento (com opção de filtrar por grupo, setor e família, e navegar dentro de cada um)
    - Vendas por forma de pagamento
+   - Gráficos de vendas (hora, dia da semana, departamento, forma de pagamento): alternância entre visão em gráfico e em tabela e exportação dos dados do gráfico em CSV (decisão do usuário, 2026-10-09)
    - Ranking de produtos mais vendidos e de categorias mais vendidas (visão dentro deste tópico)
    - Produtos que mais cresceram/perderam vendas (visão dentro deste tópico)
 

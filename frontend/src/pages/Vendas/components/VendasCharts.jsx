@@ -3,6 +3,8 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
+  LabelList,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -14,9 +16,8 @@ import {
   obterVendasPorFormaPagamento,
   obterVendasPorHora,
 } from '../../../services/vendasGraficosService.js';
-import EstadoVazio from '../../../components/EstadoVazio/EstadoVazio.jsx';
-import MensagemErro from '../../../components/MensagemErro/MensagemErro.jsx';
-import Skeleton from '../../../components/Skeleton/Skeleton.jsx';
+import CartaoGrafico from '../../../components/CartaoGrafico/CartaoGrafico.jsx';
+import TabelaDados from '../../../components/TabelaDados/TabelaDados.jsx';
 import { classificarErro } from '../../../utils/erroApi.js';
 import { formatCurrency } from '../../../utils/format.js';
 import {
@@ -26,6 +27,8 @@ import {
   formatPercentualSimples,
   formatQuantidade,
 } from '../../../utils/formatNumber.js';
+import { indiceDoPico } from '../../../utils/graficos.js';
+import { useMedidasGrafico } from '../../../utils/medidasGrafico.js';
 import { truncarRotulo } from '../../../utils/rotuloGrafico.js';
 import { useTelaEstreita } from '../../../utils/telaEstreita.js';
 import './VendasCharts.css';
@@ -43,10 +46,18 @@ const MAX_BARRAS_DEPARTAMENTO = 10;
 const DIAS_ABREVIADOS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 const COR_SERIE = 'var(--vc-serie)';
-const ESTILO_EIXO = { fill: 'var(--vc-texto-suave)', fontSize: 12 };
+const COR_DESTAQUE = 'var(--vc-serie-destaque)';
+const ESTILO_EIXO = { fill: 'var(--vc-texto-suave)' }; // tamanho da fonte vem do CSS (token --fs-xs)
 
 function temIdValido(id) {
   return id !== null && id !== undefined && id !== 0 && id !== '0' && id !== '';
+}
+
+// Valor da API para o CSV: número (sem recalcular); ausente fica vazio.
+function numeroOuNulo(valor) {
+  if (valor === null || valor === undefined || valor === '') return null;
+  const numero = Number(valor);
+  return Number.isFinite(numero) ? numero : null;
 }
 
 // Carrega dados de um gráfico de forma independente (carregando / erro / sucesso).
@@ -80,13 +91,16 @@ function useDados(carregar, dependencias) {
   return estado;
 }
 
-function TooltipValores({ active, payload, detalhes }) {
+function TooltipValores({ active, payload, detalhes, rotuloPico }) {
   if (!active || !payload || payload.length === 0) return null;
   const linha = payload[0].payload;
   return (
     <div className="vendas-charts__tooltip">
-      <strong>{linha.rotulo}</strong>
-      <div>Faturamento: {formatCurrency(linha.faturamento)}</div>
+      <strong className="vendas-charts__tooltip-rotulo">{linha.rotulo}</strong>
+      {linha.ehPico && <div className="vendas-charts__tooltip-pico">{rotuloPico}</div>}
+      <div>
+        Faturamento: <strong>{formatCurrency(linha.faturamento)}</strong>
+      </div>
       {detalhes.map(({ chave, rotulo, formatar }) => (
         <div key={chave}>
           {rotulo}: {formatar(linha[chave])}
@@ -98,99 +112,169 @@ function TooltipValores({ active, payload, detalhes }) {
 
 const DETALHE_CUPONS = [{ chave: 'quantidadeCupons', rotulo: 'Cupons', formatar: formatInteger }];
 
-// Cartão de um gráfico: título, estados (carregando/erro/vazio) e conteúdo em sucesso.
-// `topo` é renderizado em qualquer estado (ex.: trilha com "Voltar" do drill-down).
-function CartaoGrafico({
-  titulo,
-  estado,
-  vazio,
-  mensagemVazio = 'Sem dados para o período selecionado.',
-  className = '',
-  acoes,
-  topo,
-  children,
+// Rótulo de valor: nas barras horizontais (`horizontais`), no fim de cada barra (com participação,
+// quando a API a traz); nas barras verticais, só no pico.
+function RotuloBarra({ x, y, width, height, index, value, dados, horizontais, picoIndice, comParticipacao }) {
+  const linha = dados[index];
+  if (!linha || x === undefined || y === undefined) return null;
+
+  if (horizontais) {
+    const participacao =
+      comParticipacao && linha.participacaoPercentual !== undefined && linha.participacaoPercentual !== null
+        ? ` · ${formatPercentualSimples(linha.participacaoPercentual)}`
+        : '';
+    return (
+      <text
+        x={Number(x) + Number(width) + 6}
+        y={Number(y) + Number(height) / 2}
+        dominantBaseline="middle"
+        className="vendas-charts__rotulo"
+      >
+        {`${formatCurrencyCompact(value)}${participacao}`}
+      </text>
+    );
+  }
+
+  if (index !== picoIndice) return null;
+  return (
+    <text
+      x={Number(x) + Number(width) / 2}
+      y={Number(y) - 6}
+      textAnchor="middle"
+      className="vendas-charts__rotulo vendas-charts__rotulo--pico"
+    >
+      {formatCurrencyCompact(value)}
+    </text>
+  );
+}
+
+function GraficoBarras({
+  descricao,
+  dados,
+  layout = 'horizontal',
+  altura,
+  larguraRotulo,
+  detalhes,
+  aoClicar,
+  rotuloPico = 'Pico do período',
 }) {
-  return (
-    <section className={`vendas-charts__card ${className}`.trim()} aria-label={titulo}>
-      <div className="vendas-charts__cabecalho">
-        <h2 className="vendas-charts__titulo">{titulo}</h2>
-        {acoes}
-      </div>
-      {topo}
-      {estado.status === 'carregando' && <Skeleton rotulo={`Carregando ${titulo.toLowerCase()}...`} tamanho="bloco" />}
-      {estado.status === 'erro' && <MensagemErro prefixo="vendas-charts" erro={estado.erro} />}
-      {estado.status === 'sucesso' && vazio && <EstadoVazio titulo={mensagemVazio} />}
-      {estado.status === 'sucesso' && !vazio && children}
-    </section>
-  );
-}
-
-// Alternativa acessível (e testável) ao gráfico: os mesmos dados em uma tabela.
-function TabelaDados({ titulo, colunas, linhas }) {
-  return (
-    <details className="vendas-charts__detalhes">
-      <summary>Ver como tabela</summary>
-      <div className="vendas-charts__tabela-wrap">
-        <table className="vendas-charts__tabela" aria-label={`${titulo} (tabela)`}>
-          <thead>
-            <tr>
-              {colunas.map((coluna) => (
-                <th key={coluna.chave} scope="col" className={coluna.numerica ? 'num' : undefined}>
-                  {coluna.rotulo}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>{linhas}</tbody>
-        </table>
-      </div>
-    </details>
-  );
-}
-
-function GraficoBarras({ descricao, dados, layout = 'horizontal', altura = 280, larguraRotulo = 80, detalhes, aoClicar }) {
   const vertical = layout === 'vertical'; // barras horizontais, categorias no eixo Y
   const estreita = useTelaEstreita();
+  const medidas = useMedidasGrafico();
+  const alturaGrafico = altura ?? medidas.alturaGrafico;
+  const { barSize, raioBarra: raio } = medidas;
+
+  const picoIndice = indiceDoPico(dados.map((item) => item.faturamento));
+  const dadosGrafico = dados.map((item, indice) => ({ ...item, ehPico: indice === picoIndice }));
+
   // Em telas estreitas (<= 600px) o eixo de rótulos encolhe e os nomes longos são truncados com reticências.
-  const larguraEixo = estreita ? Math.min(larguraRotulo, vertical ? 96 : 64) : larguraRotulo;
+  // Mesma largura de eixo para gráficos do mesmo tipo (token por tipo, não por gráfico).
+  const larguraBase = larguraRotulo ?? medidas.larguraEixoValor;
+  const larguraEixo = estreita
+    ? Math.min(larguraBase, vertical ? medidas.larguraEixoRotuloEstreito : medidas.larguraEixoValorEstreito)
+    : larguraBase;
   const maxCaracteres = estreita ? 12 : 24;
+  const margem = vertical
+    ? { top: 8, right: estreita ? medidas.margemDireitaBarrasEstreita : medidas.margemDireitaBarras, bottom: 8, left: estreita ? 0 : 8 }
+    : { top: medidas.margemTopoColunas, right: estreita ? 8 : 16, bottom: 4, left: estreita ? 0 : 8 };
+
   return (
-    <div className="vendas-charts__grafico" role="img" aria-label={descricao}>
-      <ResponsiveContainer width="100%" height={altura}>
-        <BarChart
-          data={dados}
-          layout={layout}
-          margin={{ top: 8, right: estreita ? 8 : 16, bottom: 4, left: estreita ? 0 : 8 }}
-        >
-          <CartesianGrid stroke="var(--vc-grade)" strokeDasharray="3 3" horizontal={!vertical} vertical={vertical} />
-          {vertical ? (
-            <>
-              <XAxis type="number" tick={ESTILO_EIXO} tickFormatter={formatCurrencyCompact} tickCount={4} stroke="var(--vc-grade)" />
-              <YAxis type="category" dataKey="rotulo" width={larguraEixo} tick={ESTILO_EIXO} tickFormatter={(valor) => truncarRotulo(valor, maxCaracteres)} stroke="var(--vc-grade)" />
-            </>
-          ) : (
-            <>
-              <XAxis dataKey="rotuloEixo" tick={ESTILO_EIXO} interval="preserveStartEnd" stroke="var(--vc-grade)" />
-              <YAxis type="number" width={larguraEixo} tick={ESTILO_EIXO} tickFormatter={formatCurrencyCompact} stroke="var(--vc-grade)" />
-            </>
-          )}
-          <Tooltip
-            cursor={{ fill: 'var(--vc-cursor)' }}
-            content={<TooltipValores detalhes={detalhes} />}
-          />
-          <Bar
-            dataKey="faturamento"
-            name="Faturamento"
-            fill={COR_SERIE}
-            radius={vertical ? [0, 3, 3, 0] : [3, 3, 0, 0]}
-            cursor={aoClicar ? 'pointer' : undefined}
-            onClick={aoClicar ? (barra) => aoClicar(barra?.payload ?? barra) : undefined}
-            isAnimationActive={false}
-          />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
+    <>
+      {picoIndice >= 0 && (
+        <p className="vendas-charts__legenda">
+          <span className="vendas-charts__legenda-marca" aria-hidden="true" />
+          {rotuloPico}
+        </p>
+      )}
+      <div className="vendas-charts__grafico" role="img" aria-label={descricao}>
+        <ResponsiveContainer width="100%" height={alturaGrafico}>
+          <BarChart data={dadosGrafico} layout={layout} margin={margem}>
+            {!vertical && <CartesianGrid stroke="var(--vc-grade)" vertical={false} />}
+            {vertical ? (
+              <>
+                <XAxis type="number" hide />
+                <YAxis
+                  type="category"
+                  dataKey="rotulo"
+                  width={larguraEixo}
+                  tick={ESTILO_EIXO}
+                  tickFormatter={(valor) => truncarRotulo(valor, maxCaracteres)}
+                  axisLine={false}
+                  tickLine={false}
+                />
+              </>
+            ) : (
+              <>
+                <XAxis dataKey="rotuloEixo" tick={ESTILO_EIXO} interval="preserveStartEnd" axisLine={false} tickLine={false} />
+                <YAxis
+                  type="number"
+                  width={larguraEixo}
+                  tick={ESTILO_EIXO}
+                  tickFormatter={formatCurrencyCompact}
+                  axisLine={false}
+                  tickLine={false}
+                />
+              </>
+            )}
+            <Tooltip
+              cursor={{ fill: 'var(--vc-cursor)' }}
+              content={<TooltipValores detalhes={detalhes} rotuloPico={rotuloPico} />}
+            />
+            <Bar
+              dataKey="faturamento"
+              name="Faturamento"
+              fill={COR_SERIE}
+              barSize={barSize}
+              radius={vertical ? [0, raio, raio, 0] : [raio, raio, 0, 0]}
+              cursor={aoClicar ? 'pointer' : undefined}
+              onClick={aoClicar ? (barra) => aoClicar(barra?.payload ?? barra) : undefined}
+              isAnimationActive={false}
+            >
+              {dadosGrafico.map((item, indice) => (
+                <Cell key={indice} fill={item.ehPico ? COR_DESTAQUE : COR_SERIE} />
+              ))}
+              <LabelList
+                dataKey="faturamento"
+                content={(props) => (
+                  <RotuloBarra
+                    {...props}
+                    dados={dadosGrafico}
+                    horizontais={vertical}
+                    picoIndice={picoIndice}
+                    comParticipacao={!estreita}
+                  />
+                )}
+              />
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </>
   );
+}
+
+const COLUNA_FATURAMENTO = {
+  chave: 'faturamento',
+  rotulo: 'Faturamento',
+  numerica: true,
+  somar: true,
+  barra: true,
+  formatar: formatCurrency,
+};
+const COLUNA_CUPONS = {
+  chave: 'quantidadeCupons',
+  rotulo: 'Cupons',
+  numerica: true,
+  somar: true,
+  formatar: formatInteger,
+};
+
+function nomeArquivo(card, inicio, fim) {
+  return `vendas-${card}-${inicio}-${fim}.csv`;
+}
+
+function linhasCsv(itens) {
+  return itens.map((item) => [item.rotulo, numeroOuNulo(item.faturamento), numeroOuNulo(item.quantidadeCupons)]);
 }
 
 function VendasPorHora({ inicio, fim }) {
@@ -199,35 +283,37 @@ function VendasPorHora({ inicio, fim }) {
     const rotulo = formatHora(item.hora);
     return { ...item, rotulo, rotuloEixo: rotulo };
   });
+  const titulo = 'Vendas por hora';
 
   return (
     <CartaoGrafico
-      titulo="Vendas por hora"
+      titulo={titulo}
+      subtitulo="Faturamento por hora do dia"
       estado={estado}
       vazio={itens.every((item) => !Number(item.faturamento))}
       mensagemVazio="Sem vendas no período."
-    >
-      <GraficoBarras
-        descricao="Gráfico de barras do faturamento por hora do dia. Os valores também estão na tabela abaixo."
-        dados={itens}
-        detalhes={DETALHE_CUPONS}
-      />
-      <TabelaDados
-        titulo="Vendas por hora"
-        colunas={[
-          { chave: 'hora', rotulo: 'Hora' },
-          { chave: 'faturamento', rotulo: 'Faturamento', numerica: true },
-          { chave: 'quantidadeCupons', rotulo: 'Cupons', numerica: true },
-        ]}
-        linhas={itens.map((item) => (
-          <tr key={item.hora}>
-            <th scope="row">{item.rotulo}</th>
-            <td className="num">{formatCurrency(item.faturamento)}</td>
-            <td className="num">{formatInteger(item.quantidadeCupons)}</td>
-          </tr>
-        ))}
-      />
-    </CartaoGrafico>
+      idVisao="hora"
+      grafico={
+        <GraficoBarras
+          descricao="Gráfico de barras do faturamento por hora do dia. Use a opção Tabela para ver os valores."
+          dados={itens}
+          detalhes={DETALHE_CUPONS}
+        />
+      }
+      tabela={
+        <TabelaDados
+          titulo={titulo}
+          colunas={[{ chave: 'rotulo', rotulo: 'Hora' }, COLUNA_FATURAMENTO, COLUNA_CUPONS]}
+          itens={itens}
+          indicePico={indiceDoPico(itens.map((item) => item.faturamento))}
+        />
+      }
+      exportacao={{
+        nomeArquivo: nomeArquivo('hora', inicio, fim),
+        cabecalho: ['Hora', 'Faturamento', 'Cupons'],
+        linhas: linhasCsv(itens),
+      }}
+    />
   );
 }
 
@@ -238,30 +324,36 @@ function VendasPorDiaSemana({ inicio, fim }) {
     rotulo: item.nome,
     rotuloEixo: DIAS_ABREVIADOS[item.diaSemana] ?? String(item.nome ?? '').slice(0, 3),
   }));
+  const titulo = 'Vendas por dia da semana';
 
   return (
-    <CartaoGrafico titulo="Vendas por dia da semana" estado={estado} vazio={itens.length === 0}>
-      <GraficoBarras
-        descricao="Gráfico de barras do faturamento por dia da semana. Os valores também estão na tabela abaixo."
-        dados={itens}
-        detalhes={DETALHE_CUPONS}
-      />
-      <TabelaDados
-        titulo="Vendas por dia da semana"
-        colunas={[
-          { chave: 'nome', rotulo: 'Dia da semana' },
-          { chave: 'faturamento', rotulo: 'Faturamento', numerica: true },
-          { chave: 'quantidadeCupons', rotulo: 'Cupons', numerica: true },
-        ]}
-        linhas={itens.map((item) => (
-          <tr key={item.diaSemana}>
-            <th scope="row">{item.rotulo}</th>
-            <td className="num">{formatCurrency(item.faturamento)}</td>
-            <td className="num">{formatInteger(item.quantidadeCupons)}</td>
-          </tr>
-        ))}
-      />
-    </CartaoGrafico>
+    <CartaoGrafico
+      titulo={titulo}
+      subtitulo="Faturamento por dia da semana"
+      estado={estado}
+      vazio={itens.length === 0}
+      idVisao="dia-semana"
+      grafico={
+        <GraficoBarras
+          descricao="Gráfico de barras do faturamento por dia da semana. Use a opção Tabela para ver os valores."
+          dados={itens}
+          detalhes={DETALHE_CUPONS}
+        />
+      }
+      tabela={
+        <TabelaDados
+          titulo={titulo}
+          colunas={[{ chave: 'rotulo', rotulo: 'Dia da semana' }, COLUNA_FATURAMENTO, COLUNA_CUPONS]}
+          itens={itens}
+          indicePico={indiceDoPico(itens.map((item) => item.faturamento))}
+        />
+      }
+      exportacao={{
+        nomeArquivo: nomeArquivo('dia-semana', inicio, fim),
+        cabecalho: ['Dia da semana', 'Faturamento', 'Cupons'],
+        linhas: linhasCsv(itens),
+      }}
+    />
   );
 }
 
@@ -271,34 +363,42 @@ function VendasPorFormaPagamento({ inicio, fim }) {
     ...item,
     rotulo: item.nome || 'Não informada',
   }));
+  const titulo = 'Vendas por forma de pagamento';
+  const medidas = useMedidasGrafico();
 
   // Barras horizontais ordenadas (e não pizza): comparação precisa e rótulos legíveis.
   return (
-    <CartaoGrafico titulo="Vendas por forma de pagamento" estado={estado} vazio={itens.length === 0}>
-      <GraficoBarras
-        descricao="Gráfico de barras horizontais do faturamento por forma de pagamento. Os valores também estão na tabela abaixo."
-        dados={itens}
-        layout="vertical"
-        altura={Math.max(160, itens.length * 40 + 40)}
-        larguraRotulo={130}
-        detalhes={DETALHE_CUPONS}
-      />
-      <TabelaDados
-        titulo="Vendas por forma de pagamento"
-        colunas={[
-          { chave: 'nome', rotulo: 'Forma de pagamento' },
-          { chave: 'faturamento', rotulo: 'Faturamento', numerica: true },
-          { chave: 'quantidadeCupons', rotulo: 'Cupons', numerica: true },
-        ]}
-        linhas={itens.map((item, indice) => (
-          <tr key={item.formaPagamentoId ?? `sem-forma-${indice}`}>
-            <th scope="row">{item.rotulo}</th>
-            <td className="num">{formatCurrency(item.faturamento)}</td>
-            <td className="num">{formatInteger(item.quantidadeCupons)}</td>
-          </tr>
-        ))}
-      />
-    </CartaoGrafico>
+    <CartaoGrafico
+      titulo={titulo}
+      subtitulo="Faturamento por forma de pagamento"
+      estado={estado}
+      vazio={itens.length === 0}
+      idVisao="forma-pagamento"
+      grafico={
+        <GraficoBarras
+          descricao="Gráfico de barras horizontais do faturamento por forma de pagamento. Use a opção Tabela para ver os valores."
+          dados={itens}
+          layout="vertical"
+          altura={Math.max(medidas.alturaCompacta, itens.length * medidas.alturaPorBarraForma + medidas.alturaExtraBarras)}
+          larguraRotulo={medidas.larguraEixoRotulo}
+          detalhes={DETALHE_CUPONS}
+          rotuloPico="Maior valor"
+        />
+      }
+      tabela={
+        <TabelaDados
+          titulo={titulo}
+          colunas={[{ chave: 'rotulo', rotulo: 'Forma de pagamento' }, COLUNA_FATURAMENTO, COLUNA_CUPONS]}
+          itens={itens}
+          indicePico={indiceDoPico(itens.map((item) => item.faturamento))}
+        />
+      }
+      exportacao={{
+        nomeArquivo: nomeArquivo('forma-pagamento', inicio, fim),
+        cabecalho: ['Forma de pagamento', 'Faturamento', 'Cupons'],
+        linhas: linhasCsv(itens),
+      }}
+    />
   );
 }
 
@@ -306,6 +406,7 @@ function VendasPorDepartamento({ inicio, fim }) {
   const [nivel, setNivel] = useState('grupo');
   const [detalhe, setDetalhe] = useState(null); // { id, nome } do departamento aberto
   const detalheId = detalhe?.id;
+  const medidas = useMedidasGrafico();
 
   const estado = useDados(
     () => obterVendasPorDepartamento({ inicio, fim, nivel, id: detalheId }),
@@ -365,6 +466,9 @@ function VendasPorDepartamento({ inicio, fim }) {
     </div>
   );
 
+  const rotuloPrimeira = emDetalhe ? 'Produto' : 'Departamento';
+  const sufixoArquivo = emDetalhe ? `${nivel}-produtos-${detalheId}` : nivel;
+
   return (
     <CartaoGrafico
       titulo={titulo}
@@ -373,53 +477,71 @@ function VendasPorDepartamento({ inicio, fim }) {
       className="vendas-charts__card--largo"
       acoes={seletor}
       topo={trilha}
-    >
-      <GraficoBarras
-        descricao={`Gráfico de barras horizontais do faturamento por ${emDetalhe ? 'produto' : nivelRotulo}. Os valores também estão na tabela abaixo.`}
-        dados={itensGrafico}
-        layout="vertical"
-        altura={Math.max(160, itensGrafico.length * 36 + 40)}
-        larguraRotulo={160}
-        detalhes={[
-          { chave: 'quantidade', rotulo: 'Quantidade', formatar: formatQuantidade },
-          { chave: 'participacaoPercentual', rotulo: 'Participação', formatar: formatPercentualSimples },
-        ]}
-        aoClicar={emDetalhe ? undefined : abrirDetalhe}
-      />
-      {itens.length > MAX_BARRAS_DEPARTAMENTO && (
-        <p className="vendas-charts__nota">
-          O gráfico mostra os {MAX_BARRAS_DEPARTAMENTO} maiores; a tabela lista todos.
-        </p>
-      )}
-      <TabelaDados
-        titulo={titulo}
-        colunas={[
-          { chave: 'nome', rotulo: emDetalhe ? 'Produto' : 'Departamento' },
-          { chave: 'faturamento', rotulo: 'Faturamento', numerica: true },
-          { chave: 'quantidade', rotulo: 'Quantidade', numerica: true },
-          { chave: 'participacaoPercentual', rotulo: 'Participação', numerica: true },
-        ]}
-        linhas={itens.map((item, indice) => {
-          const navegavel = !emDetalhe && temIdValido(item.id);
-          return (
-            <tr key={`${item.id ?? 'sem-id'}-${indice}`}>
-              <th scope="row">
-                {navegavel ? (
-                  <button type="button" className="vendas-charts__link" onClick={() => abrirDetalhe(item)}>
-                    {item.rotulo}
-                  </button>
-                ) : (
-                  item.rotulo
-                )}
-              </th>
-              <td className="num">{formatCurrency(item.faturamento)}</td>
-              <td className="num">{formatQuantidade(item.quantidade)}</td>
-              <td className="num">{formatPercentualSimples(item.participacaoPercentual)}</td>
-            </tr>
-          );
-        })}
-      />
-    </CartaoGrafico>
+      idVisao="departamento"
+      grafico={
+        <>
+          <GraficoBarras
+            descricao={`Gráfico de barras horizontais do faturamento por ${emDetalhe ? 'produto' : nivelRotulo}. Use a opção Tabela para ver os valores.`}
+            dados={itensGrafico}
+            layout="vertical"
+            altura={Math.max(
+              medidas.alturaCompacta,
+              itensGrafico.length * medidas.alturaPorBarraDepartamento + medidas.alturaExtraBarras,
+            )}
+            larguraRotulo={medidas.larguraEixoDepartamento}
+            detalhes={[
+              { chave: 'quantidade', rotulo: 'Quantidade', formatar: formatQuantidade },
+              { chave: 'participacaoPercentual', rotulo: 'Participação', formatar: formatPercentualSimples },
+            ]}
+            aoClicar={emDetalhe ? undefined : abrirDetalhe}
+            rotuloPico="Maior valor"
+          />
+          {itens.length > MAX_BARRAS_DEPARTAMENTO && (
+            <p className="vendas-charts__nota">
+              O gráfico mostra os {MAX_BARRAS_DEPARTAMENTO} maiores; a tabela lista todos.
+            </p>
+          )}
+        </>
+      }
+      tabela={
+        <TabelaDados
+          titulo={titulo}
+          colunas={[
+            { chave: 'rotulo', rotulo: rotuloPrimeira },
+            COLUNA_FATURAMENTO,
+            { chave: 'quantidade', rotulo: 'Quantidade', numerica: true, somar: true, formatar: formatQuantidade },
+            {
+              chave: 'participacaoPercentual',
+              rotulo: 'Participação',
+              numerica: true,
+              formatar: formatPercentualSimples,
+            },
+          ]}
+          itens={itens}
+          indicePico={indiceDoPico(itens.map((item) => item.faturamento))}
+          totalCompleto={estado.dados?.total}
+          renderPrimeira={(item) =>
+            !emDetalhe && temIdValido(item.id) ? (
+              <button type="button" className="vendas-charts__link" onClick={() => abrirDetalhe(item)}>
+                {item.rotulo}
+              </button>
+            ) : (
+              item.rotulo
+            )
+          }
+        />
+      }
+      exportacao={{
+        nomeArquivo: nomeArquivo(`departamento-${sufixoArquivo}`, inicio, fim),
+        cabecalho: [rotuloPrimeira, 'Faturamento', 'Quantidade', 'Participação (%)'],
+        linhas: itens.map((item) => [
+          item.rotulo,
+          numeroOuNulo(item.faturamento),
+          numeroOuNulo(item.quantidade),
+          numeroOuNulo(item.participacaoPercentual),
+        ]),
+      }}
+    />
   );
 }
 
