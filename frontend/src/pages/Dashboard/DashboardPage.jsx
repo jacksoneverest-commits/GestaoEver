@@ -8,16 +8,16 @@ import PeriodFilter from '../../components/PeriodFilter/PeriodFilter.jsx';
 import Skeleton from '../../components/Skeleton/Skeleton.jsx';
 import { obterFaturamento } from '../../services/vendasService.js';
 import { classificarErro } from '../../utils/erroApi.js';
-import { formatCurrency, formatDate } from '../../utils/format.js';
+import { formatCurrency } from '../../utils/format.js';
 import { formatDecimal, formatInteger } from '../../utils/formatNumber.js';
-import { periodoMesAtual, periodoUltimosDias } from '../../utils/periodo.js';
+import { periodoMesAtual, periodoUltimosDias, periodoUltimosDiasAteOntem } from '../../utils/periodo.js';
 import VendasCharts from '../Vendas/components/VendasCharts.jsx';
 import './DashboardPage.css';
 
 const ATALHOS_PERIODO = [
   { id: 'hoje', rotulo: 'Hoje', calcular: () => periodoUltimosDias(1) },
-  { id: '7-dias', rotulo: '7 dias', calcular: () => periodoUltimosDias(7) },
-  { id: '30-dias', rotulo: '30 dias', calcular: () => periodoUltimosDias(30) },
+  { id: '7-dias', rotulo: '7 dias', calcular: () => periodoUltimosDiasAteOntem(7) },
+  { id: '30-dias', rotulo: '30 dias', calcular: () => periodoUltimosDiasAteOntem(30) },
   { id: 'mes', rotulo: 'Mês', calcular: () => periodoMesAtual() },
 ];
 const ATALHO_PADRAO = '30-dias';
@@ -53,8 +53,6 @@ function DashboardPage() {
       cancelado = true;
     };
   }, [periodo.inicio, periodo.fim]);
-
-  const comparativo = dados && dados.comparativoPeriodoAnterior;
 
   return (
     <div className="dashboard">
@@ -99,19 +97,7 @@ function DashboardPage() {
         )}
         {!carregando && !erro && dados && (
           <>
-            <KpiCard
-              nivel={2}
-              variante="azul"
-              icone="vendas"
-              rotulo="Faturamento"
-              valor={formatCurrency(dados.faturamento)}
-              variacao={comparativo ? comparativo.variacaoPercentual : null}
-              detalhe={
-                comparativo
-                  ? `Período anterior: ${formatDate(comparativo.periodoInicio)} a ${formatDate(comparativo.periodoFim)}`
-                  : undefined
-              }
-            />
+            <KpiCard nivel={2} variante="azul" icone="vendas" rotulo="Faturamento" valor={formatCurrency(dados.faturamento)} />
             <KpiCard nivel={2} variante="ambar" icone="ranking" rotulo="Ticket médio" valor={formatCurrency(dados.ticketMedio)} />
             <KpiCard nivel={2} variante="ciano" icone="dashboard" rotulo="Quantidade de cupons" valor={formatInteger(dados.quantidadeCupons)} />
             <KpiCard nivel={2} variante="verde" icone="estoque" rotulo="Itens por compra" valor={formatDecimal(dados.itensPorCompra)} />

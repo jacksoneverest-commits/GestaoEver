@@ -52,31 +52,22 @@ describe('DashboardPage', () => {
     expect(screen.getByText('6,50')).toBeInTheDocument();
   });
 
-  it('o período padrão são os últimos 30 dias terminando hoje', async () => {
+  it('o período padrão são os últimos 30 dias fechados, terminando ontem', async () => {
     obterFaturamento.mockResolvedValue(respostaBase);
     render(<DashboardPage />);
     await screen.findByText(moeda(125430.5));
 
-    expect(obterFaturamento).toHaveBeenCalledWith({ inicio: '2026-08-26', fim: '2026-09-24' });
+    expect(obterFaturamento).toHaveBeenCalledWith({ inicio: '2026-08-25', fim: '2026-09-23' });
     expect(screen.getByRole('button', { name: '30 dias' })).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('mostra o comparativo com o período anterior no card de Faturamento', async () => {
+  it('não mostra comparativo com o período anterior (isso fica no módulo Vendas)', async () => {
     obterFaturamento.mockResolvedValue(respostaBase);
-    render(<DashboardPage />);
-    await screen.findByText(moeda(125430.5));
-
-    expect(screen.getByText(/Aumento de/)).toBeInTheDocument();
-    expect(screen.getByText('18,05%')).toBeInTheDocument();
-    expect(screen.getByText(/27\/07\/2026 a 25\/08\/2026/)).toBeInTheDocument();
-  });
-
-  it('sem comparativo disponível, não mostra variação', async () => {
-    obterFaturamento.mockResolvedValue({ ...respostaBase, comparativoPeriodoAnterior: null });
     render(<DashboardPage />);
     await screen.findByText(moeda(125430.5));
 
     expect(screen.queryByText(/Aumento de|Queda de/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Período anterior/)).not.toBeInTheDocument();
   });
 
   it('mostra skeletons enquanto carrega', () => {
@@ -102,7 +93,7 @@ describe('DashboardPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Dados desse período ainda não foram preparados');
   });
 
-  it('trocar para 7 dias refaz a chamada com o novo período', async () => {
+  it('trocar para 7 dias refaz a chamada com os 7 dias fechados até ontem', async () => {
     obterFaturamento.mockResolvedValue(respostaBase);
     render(<DashboardPage />);
     await screen.findByText(moeda(125430.5));
@@ -110,7 +101,7 @@ describe('DashboardPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '7 dias' }));
     await screen.findByText(moeda(125430.5));
 
-    expect(obterFaturamento).toHaveBeenLastCalledWith({ inicio: '2026-09-18', fim: '2026-09-24' });
+    expect(obterFaturamento).toHaveBeenLastCalledWith({ inicio: '2026-09-17', fim: '2026-09-23' });
     expect(screen.getByRole('button', { name: '7 dias' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: '30 dias' })).toHaveAttribute('aria-pressed', 'false');
   });
@@ -137,7 +128,7 @@ describe('DashboardPage', () => {
     fireEvent.change(screen.getByLabelText('Data inicial'), { target: { value: '2026-09-10' } });
     await screen.findByText(moeda(125430.5));
 
-    expect(obterFaturamento).toHaveBeenLastCalledWith({ inicio: '2026-09-10', fim: '2026-09-24' });
+    expect(obterFaturamento).toHaveBeenLastCalledWith({ inicio: '2026-09-10', fim: '2026-09-23' });
     expect(screen.getByRole('button', { name: '30 dias' })).toHaveAttribute('aria-pressed', 'false');
   });
 
@@ -161,7 +152,7 @@ describe('DashboardPage', () => {
     render(<DashboardPage />);
     await screen.findByText(moeda(125430.5));
 
-    expect(screen.getByTestId('vendas-charts')).toHaveAttribute('data-inicio', '2026-08-26');
-    expect(screen.getByTestId('vendas-charts')).toHaveAttribute('data-fim', '2026-09-24');
+    expect(screen.getByTestId('vendas-charts')).toHaveAttribute('data-inicio', '2026-08-25');
+    expect(screen.getByTestId('vendas-charts')).toHaveAttribute('data-fim', '2026-09-23');
   });
 });
