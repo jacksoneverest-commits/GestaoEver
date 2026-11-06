@@ -3,6 +3,7 @@ import Icon from '../Icon/Icon.jsx';
 import AvatarMenu from './AvatarMenu.jsx';
 import BuscaModulos from './BuscaModulos.jsx';
 import AtualizarDados from '../AtualizarDados/AtualizarDados.jsx';
+import AlternarTema from '../AlternarTema/AlternarTema.jsx';
 import { MODULOS, moduloDaRota } from './modulos.js';
 import './AppShell.css';
 
@@ -174,6 +175,7 @@ function AppShell({ rotaAtual, usuario, onLogout, onDadosAtualizados, children }
           <p className="appshell__titulo" data-testid="appshell-titulo">{moduloAtual.rotulo}</p>
           <BuscaModulos />
           <AtualizarDados onConcluido={onDadosAtualizados} />
+          <AlternarTema />
           <AvatarMenu nome={usuario} onLogout={onLogout} />
         </div>
 
