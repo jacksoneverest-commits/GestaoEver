@@ -123,3 +123,55 @@
   --vc-margem-direita-barras: 124;
   --vc-margem-direita-barras-estreita: 64;
 }
+
+/* Tema escuro: só redefine os tokens de cor; o restante do CSS já usa var(). */
+:root[data-theme='escuro'] {
+  color-scheme: dark;
+  --cor-fundo: #0f1420;
+  --cor-superficie: #181f2f;
+  --cor-borda: #2a3348;
+  --cor-texto: #e6eaf4;
+  --cor-texto-suave: #a3adc2;
+  --cor-borda-forte: #7d889e;
+  --cor-grade-grafico: #2f3951;
+  --cor-overlay: rgba(0, 0, 0, 0.6);
+  --cor-skeleton-base: #222b3f;
+  --cor-skeleton-brilho: #2c3750;
+  --cor-cursor-grafico: rgba(122, 146, 255, 0.14);
+  --cor-primaria: #6d85ff;
+  --cor-primaria-escura: #5a73f0;
+  --cor-primaria-fundo: #222c52;
+  --cor-texto-sobre-cor: #ffffff;
+
+  --cor-positivo: #34d399;
+  --cor-negativo: #f87171;
+  --cor-negativo-fundo: #3a1b1f;
+  --cor-negativo-borda: #7f2d33;
+  --cor-aviso: #fbbf24;
+  --cor-aviso-fundo: #38290f;
+  --cor-aviso-borda: #8a6112;
+  --cor-aviso-fundo-forte: #4a3510;
+  --cor-aviso-destaque: #f59e0b;
+  --cor-info: #93b4ff;
+  --cor-info-fundo: #1a2745;
+  --cor-info-borda: #2f4a85;
+  --cor-sucesso-texto: #6ee7a0;
+  --cor-sucesso-fundo: #12361f;
+  --cor-sucesso-borda: #1f6b3a;
+  --cor-sucesso-fundo-suave: #11291a;
+  --cor-sucesso-borda-suave: #1a4d2c;
+  --cor-negativo-texto-escuro: #fca5a5;
+  --cor-negativo-fundo-forte: #4a2025;
+  --cor-negativo-borda-forte: #8f3a41;
+  --cor-zebra: #1c2437;
+
+  --sombra-card: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --sombra-elevada: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+  --cor-superficie-grafico: #1c2437;
+  --cor-grade-grafico-suave: #2a3348;
+  --cor-serie-destaque: #b4c2ff;
+  --vc-serie-2: #22b8d6;
+  --vc-serie-3: #f59e0b;
+  --vc-serie-4: #34d399;
+}

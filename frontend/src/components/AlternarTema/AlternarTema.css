@@ -1,0 +1,13 @@
+.alternar-tema {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--alvo-toque);
+  min-height: var(--alvo-toque);
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-md);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  cursor: pointer;
+}
+.alternar-tema:hover { background: var(--cor-primaria-fundo); }
